@@ -7,6 +7,9 @@
 
 static inline int add_var( bstring * f, int argc, int namespace_index, bstring namespace, int name_index, bstring name, bstring type, bstring initializer ) {
 
+	debug_v( "Adding variable with name: \"%.*s\" of type: \"%.*s\" in namespace: \"%.*s\"",
+			name->slen, name->data, type->slen, type->data, namespace->slen, namespace->data );
+
 	return 0;
 
 }
@@ -21,7 +24,6 @@ static inline char is_whitespace( char c ) {
 
 static inline int trim( bstring s, int start, int end, bstring f ) {
 
-	debug_v( "start:%d, end:%d, slen:%d", start, end, f->slen );
 	check( start >= 0 && end <= f->slen, final_cleanup );
 
 	while( is_whitespace( f->data[start] ) ) {
@@ -29,7 +31,7 @@ static inline int trim( bstring s, int start, int end, bstring f ) {
 		check( start < end, final_cleanup );
 	}
 
-	while( is_whitespace( f->data[end] ) ) {
+	while( is_whitespace( f->data[end - 1] ) ) {
 		end--;
 		check( start < end, final_cleanup );
 	}
@@ -37,8 +39,6 @@ static inline int trim( bstring s, int start, int end, bstring f ) {
 	s->data = f->data + start;
 	s->slen = end - start;
 	s->mlen = -1;
-
-	debug_v( "string is: \"%*.s\"", s->slen, s->data );
 
 	return 0;
 
@@ -95,14 +95,14 @@ int main( int argc, char * * argv ) {
 			struct tagbstring tags[3];
 
 
-			p3 = binstr( f[i], p1, b3 );
+			p3 = binstr( f[i], p1 + b1->slen, b3 );
 			check( p3 >= 0, b_cleanup );
 
 
-			p2 = binchr( f[i], p1, b2 );
+			p2 = binchr( f[i], p1 + b1->slen, b2 );
 			check( p2 >=0 && p2 < p3, b_cleanup );
 
-			rc = trim( &namespace, p1, p2, f[i] );
+			rc = trim( &namespace, p1 + b1->slen, p2, f[i] );
 			check( rc == 0, b_cleanup );
 
 
@@ -112,10 +112,10 @@ int main( int argc, char * * argv ) {
 
 			while( ( p2 = binchr( f[i], p2 + 1, b2 ) ) >= 0 && p2 <= p3 ) {
 
-				old_p2 = p2;
-
-				rc = trim( &tags[j], old_p2, p2, f[i] );
+				rc = trim( &tags[j], old_p2 + 1, p2, f[i] );
 				check( rc == 0, b_cleanup );
+
+				old_p2 = p2;
 
 				j++;
 
