@@ -6,14 +6,14 @@
 
 
 typedef struct {
-	struct tagbstring name;
-	struct tagbstring type;
-	struct tagbstring init;
+	bstring name;
+	bstring type;
+	bstring init;
 } var_t;
 
 #define VARMAX_STEP 10
 typedef struct {
-	struct tagbstring namespace;
+	bstring namespace;
 	var_t * varv;
 	int varc;
 	int varmax;
@@ -24,13 +24,7 @@ static ns_t * * namespaces;
 
 
 
-static void b_dup( bstring target, bstring original ) {
-	target->slen = original->slen;
-	target->mlen = original->mlen;
-	target->data = original->data;
-}
-
-static inline int add_var( bstring namespace, bstring name, bstring type, bstring initializer ) {
+static int add_var( bstring namespace, bstring name, bstring type, bstring initializer ) {
 
 	ns_t * * nss;
 	int namespacesc;
@@ -46,7 +40,7 @@ static inline int add_var( bstring namespace, bstring name, bstring type, bstrin
 
 	nss = namespaces;
 	while( *nss ) {
-		if( biseq( &( ( *nss )->namespace ), namespace ) == 1 ) {
+		if( biseq( ( *nss )->namespace, namespace ) == 1 ) {
 			break;
 		}
 		nss++;
@@ -65,7 +59,8 @@ static inline int add_var( bstring namespace, bstring name, bstring type, bstrin
 		*nss = malloc( sizeof( ns_t ) );
 		check( *nss, final_cleanup );
 
-		b_dup( &( ( *nss )->namespace ), namespace );
+		( *nss )->namespace = bstrcpy( namespace );
+		check( ( *nss )->namespace, final_cleanup );
 		( *nss )->varv = malloc( VARMAX_STEP * sizeof( var_t ) );
 		( *nss )->varc = 0;
 		( *nss )->varmax = VARMAX_STEP;
@@ -73,7 +68,7 @@ static inline int add_var( bstring namespace, bstring name, bstring type, bstrin
 	}
 
 	for( i = 0; i < ( *nss )->varc; i++ ) {
-		if( biseq( &( ( *nss )->varv[i].name ), name ) == 1 ) {
+		if( biseq( ( *nss )->varv[i].name, name ) == 1 ) {
 			debug_v( "Duplicate variable \"%.*s\" in namespace \"%.*s\". Aborting...",
 					name->slen, name->data, namespace->slen, namespace->data );
 			check( 0, final_cleanup );
@@ -87,9 +82,15 @@ static inline int add_var( bstring namespace, bstring name, bstring type, bstrin
 		( *nss )->varv = tmp_var;
 	}
 
-	b_dup( &( ( *nss )->varv[ ( *nss )->varc ].name ), name );
-	b_dup( &( ( *nss )->varv[ ( *nss )->varc ].type ), type );
-	b_dup( &( ( *nss )->varv[ ( *nss )->varc ].init ), initializer );
+	( *nss )->varv[ ( *nss )->varc ].name = bstrcpy( name );
+	check( ( *nss )->varv[ ( *nss )->varc ].name, final_cleanup );
+
+	( *nss )->varv[ ( *nss )->varc ].type = bstrcpy( type );
+	check( ( *nss )->varv[ ( *nss )->varc ].type, final_cleanup );
+
+	( *nss )->varv[ ( *nss )->varc ].init = bstrcpy( initializer );
+	check( ( *nss )->varv[ ( *nss )->varc ].init, final_cleanup );
+
 	( *nss )->varc++;
 
 	return 0;
@@ -129,6 +130,111 @@ static inline int trim( bstring s, int start, int end, bstring f ) {
 
 final_cleanup:
 return -1;
+
+}
+
+static inline char is_delimiter( char c ) {
+	if(
+			c == ';'
+			|| c == ','
+			|| c == '('
+			|| c == ')'
+			|| c == '{'
+			|| c == '}'
+			|| c == '['
+			|| c == ']'
+			|| is_whitespace( c )
+	  ) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+static char is_from_namespace( bstring namespace, bstring file, int pos ) {
+
+	int rc;
+	bstring b1;
+	bstring b2;
+	int p1;
+	int p2;
+	struct tagbstring ns;
+	int res;
+
+
+	res = 0;
+
+	b1 = bfromcstr( "FRA_NAMESPACE(" );
+	check( b1, final_cleanup );
+
+	p1 = binstrr( file, pos, b1 );
+
+	if( p1 >= 0 ) {
+
+		b2 = bfromcstr( ")" );
+		check( b2 && p1 < pos, b1_cleanup );
+
+		p2 = binstr( file, p1 + b1->slen, b2 );
+		check( p2 >=0 && p2 > p1 + b1->slen, b2_cleanup );
+
+		rc = trim( &ns, p1 + b1->slen, p2, file );
+		check( rc == 0, b2_cleanup );
+
+		if( biseq( &ns, namespace ) == 1 ) {
+			res = 1;
+		}
+
+		bdestroy( b2 );
+
+	}
+
+	bdestroy( b1 );
+
+	return res;
+
+b2_cleanup:
+	bdestroy( b2 );
+
+b1_cleanup:
+	bdestroy( b1 );
+
+final_cleanup:
+	return 0;
+
+}
+
+static int replace_var( bstring * f, int argc, bstring namespace, bstring name, bstring type, int ns_index, int var_index ) {
+
+	int pos;
+	int i;
+
+	for( i = 3; i < argc; i++ ) {
+		pos = 0;
+		while( pos >= 0 && pos < f[i]->slen ) {
+			if( ! pos ) pos = -1;
+			pos = binstr( f[i], pos + 1, name );
+			if( pos >= 0 ) {
+				if(
+						(
+						 pos == 0
+						 || is_delimiter( *( f[i]->data + pos - 1 ) )
+						)
+						&&
+						(
+						 pos + name->slen == f[i]->slen
+						 || is_delimiter( *( f[i]->data + pos + name->slen ) )
+						)
+						&& is_from_namespace( namespace, f[i], pos )
+				  ) {
+					debug_v( "Will replace variable \"%.*s\".", name->slen, name->data );
+				} else {
+					debug_v( "Variable \"%.*s\" is not to be replaced...", name->slen, name->data );
+				}
+			}
+		}
+	}
+
+	return 0;
 
 }
 
@@ -224,16 +330,52 @@ int main( int argc, char * * argv ) {
 		}
 	}
 
+	for( i = 3; i < argc; i++ ) {
+		p1 = 0;
+		while( p1 >= 0 && p1 < f[i]->slen ) {
+			if( ! p1 ) p1 = -1;
+			p1 = binstr( f[i], p1 + 1, b1 );
+			if( p1 >= 0 ) {
+
+				p3 = binstr( f[i], p1 + b1->slen, b3 );
+				check( p3 > p1 && p3 <= f[i]->slen, b_cleanup );
+
+				rc = bdelete( f[i], p1, p3 - p1 + 1 );
+				check( rc == BSTR_OK, b_cleanup );
+
+			}
+		}
+	}
+
 	nss = namespaces;
 	while( *nss ) {
-		debug_v( "Namespace \"%.*s\":", ( *nss )->namespace.slen, ( *nss )->namespace.data );
+		debug_v( "Namespace \"%s\":", ( *nss )->namespace->data );
 		for( i = 0; i < ( *nss )->varc; i++ ) {
-			debug_v( "    Variable \"%.*s\":", ( *nss )->varv[i].name.slen, ( *nss )->varv[i].name.data );
-			debug_v( "        Type: \"%.*s\"", ( *nss )->varv[i].init.slen, ( *nss )->varv[i].init.data );
-			debug_v( "        Initializer: \"%.*s\"", ( *nss )->varv[i].init.slen, ( *nss )->varv[i].init.data );
+			debug_v( "    Variable \"%s\":", ( *nss )->varv[i].name->data );
+			debug_v( "        Type: \"%s\"", ( *nss )->varv[i].init->data );
+			debug_v( "        Initializer: \"%s\"", ( *nss )->varv[i].init->data );
+
+			rc = replace_var(
+					f,
+					argc,
+					( *nss )->namespace,
+					( *nss )->varv[i].name,
+					( *nss )->varv[i].type,
+					nss - namespaces,
+					i
+					);
+			check( rc == 0, b_cleanup )
+
 		}
 		nss++;
 	}
+
+	//TODO free namespaces array, for now let the OS handle it :)
+	bdestroy( b1 );
+	bdestroy( b2 );
+	bdestroy( b3 );
+	bdestroy( b4 );
+	free( f );
 
 	return 0;
 
