@@ -5,13 +5,18 @@
 
 
 
+#define FRA_STORE_NAME "req->store"
+#define VARMAX_STEP 10
+
+
+
+
 typedef struct {
 	bstring name;
 	bstring type;
 	bstring init;
 } var_t;
 
-#define VARMAX_STEP 10
 typedef struct {
 	bstring namespace;
 	var_t * varv;
@@ -205,8 +210,10 @@ final_cleanup:
 
 static int replace_var( bstring * f, int argc, bstring namespace, bstring name, bstring type, int ns_index, int var_index ) {
 
+	int rc;
 	int pos;
 	int i;
+	bstring r;
 
 	for( i = 3; i < argc; i++ ) {
 		pos = 0;
@@ -227,6 +234,12 @@ static int replace_var( bstring * f, int argc, bstring namespace, bstring name, 
 						&& is_from_namespace( namespace, f[i], pos )
 				  ) {
 					debug_v( "Will replace variable \"%.*s\".", name->slen, name->data );
+					r = bformat( "( (%s)( *( %s.data + %s.positions[%d][%d] ) ) )",
+							type->data, FRA_STORE_NAME, FRA_STORE_NAME, ns_index, var_index  );
+					check( r, final_cleanup );
+					rc = breplace( f[i], pos, name->slen, r, 'z' );
+					check( rc == BSTR_OK, final_cleanup );
+					bdestroy( r );
 				} else {
 					debug_v( "Variable \"%.*s\" is not to be replaced...", name->slen, name->data );
 				}
@@ -235,6 +248,9 @@ static int replace_var( bstring * f, int argc, bstring namespace, bstring name, 
 	}
 
 	return 0;
+
+final_cleanup:
+	return -1;
 
 }
 
@@ -247,7 +263,6 @@ int main( int argc, char * * argv ) {
 	bstring b1;
 	bstring b2;
 	bstring b3;
-	bstring b4;
 	int p1;
 	int p2;
 	int p3;
@@ -276,8 +291,7 @@ int main( int argc, char * * argv ) {
 	b1 = bfromcstr( "FRA_VARIABLES(" );
 	b2 = bfromcstr( ",)" );
 	b3 = bfromcstr( ")" );
-	b4 = bfromcstr( "FRA_NAMESPACE(" );
-	check( b1 && b2 && b3 && b4, b_cleanup );
+	check( b1 && b2 && b3, b_cleanup );
 
 	for( i = 3; i < argc; i++ ) {
 		p1 = 0;
@@ -370,11 +384,22 @@ int main( int argc, char * * argv ) {
 		nss++;
 	}
 
+	for( i = 3; i < argc; i++ ) {
+		rc = bassignformat( b1, "%s/%s", argv[2], argv[i] );
+		check( rc == BSTR_OK, b_cleanup );
+		debug_v( "File path is: %s", bdata( b1 ) );
+		file = fopen( bdata( b1 ), "w" );
+		check( file, b_cleanup );
+		rc = fwrite( f[i]->data, f[i]->slen, 1, file );
+		fclose( file );
+		check( rc == 1, b_cleanup );
+	}
+
+
 	//TODO free namespaces array, for now let the OS handle it :)
 	bdestroy( b1 );
 	bdestroy( b2 );
 	bdestroy( b3 );
-	bdestroy( b4 );
 	free( f );
 
 	return 0;
@@ -383,7 +408,6 @@ b_cleanup:
 	bdestroy( b1 );
 	bdestroy( b2 );
 	bdestroy( b3 );
-	bdestroy( b4 );
 
 f_cleanup:
 	free( f );
