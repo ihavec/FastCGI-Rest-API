@@ -289,12 +289,10 @@ static int replace_var( int ns_index, int var_index ) {
 						namespaces[ ns_index ]->declared_in_f[i] = 1;
 					}
 
-					debug_v( "Will replace variable \"%.*s\".", name->slen, name->data );
-
 					check( namespaces[ ns_index ]->store, msg_cleanup );
 
 					r = bformat(
-							"(  ( (struct fra_ns%d)( %s[%d] ) ).var%d )",
+							"( ( (struct fra_ns%d *)( %s[%d] ) )->var%d )",
 							ns_index,
 							bdata( namespaces[ ns_index ]->store ),
 							namespaces[ ns_index ]->store_index,
@@ -307,8 +305,6 @@ static int replace_var( int ns_index, int var_index ) {
 
 					bdestroy( r );
 
-				} else {
-					debug_v( "Variable \"%.*s\" is not to be replaced...", name->slen, name->data );
 				}
 			}
 		}
@@ -381,6 +377,8 @@ static int set_store_for_namespace( int file_id, int store_id, bstring store, bs
 	ns->store_f = file_id;
 	ns->store_id = store_id;
 
+	if( ! ns->declared_in_f[ file_id ] ) ns->declared_in_f[ file_id ] = 1;
+
 	return 0;
 
 msg_cleanup:
@@ -415,7 +413,7 @@ static int replace_fra_store_code( int file_id, int store_id, bstring bf, int po
 		if(  ( *nss )->store_f == file_id && ( *nss )->store_id == store_id ) {
 			rc = bformata(
 					r,
-					"%s[%d] = malloc( sizeof( struct fra_store%d ) );\n",
+					"%s[%d] = malloc( sizeof( struct fra_ns%d ) );\n",
 					bdata( store ),
 					( *nss )->store_index,
 					( *nss )->store_index
@@ -428,6 +426,9 @@ static int replace_fra_store_code( int file_id, int store_id, bstring bf, int po
 	check( rc == BSTR_OK, r_cleanup );
 
 	rc = breplace( bf, pos, len, r, ' ' );
+	check( rc == BSTR_OK, r_cleanup );
+
+	rc = binsertblk( bf, 0, "#include <stdlib.h>\n", 20, ' ' );
 	check( rc == BSTR_OK, r_cleanup );
 
 	bdestroy( r );
@@ -489,9 +490,9 @@ int main( int argc, char * * argv ) {
 	g_argc = argc;
 
 	for( i = 3; i < argc; i++ ) {
-		p1 = 0;
-		while( p1 >= 0 && p1 < f[i]->slen ) {
-			if( ! p1 ) p1 = -1;
+		p1 = -2000;
+		while( ( p1 >= 0 || p1 == -2000 ) && p1 < f[i]->slen ) {
+			if( p1 == -2000 ) p1 = -1;
 			p1 = binstr( f[i], p1 + 1, b1 );
 			if( p1 >= 0 ) {
 
@@ -587,16 +588,14 @@ int main( int argc, char * * argv ) {
 	check( rc == 0, b_cleanup );
 
 	for( nss = namespaces; *nss; nss++ ) {
-		debug_v( "Namespace \"%s\":", ( *nss )->namespace->data );
+
 		for( i = 0; i < ( *nss )->varc; i++ ) {
-			debug_v( "    Variable \"%s\":", ( *nss )->varv[i].name->data );
-			debug_v( "        Type: \"%s\"", ( *nss )->varv[i].type->data );
-			debug_v( "        Initializer: \"%s\"", ( *nss )->varv[i].init->data );
 
 			rc = replace_var( nss - namespaces, i );
 			check( rc == 0, b_cleanup )
 
 		}
+
 	}
 
 	for( nss = namespaces; *nss; nss++ ) {
@@ -614,7 +613,6 @@ int main( int argc, char * * argv ) {
 	for( i = 3; i < argc; i++ ) {
 		rc = bassignformat( b1, "%s/%s", argv[2], argv[i] );
 		check( rc == BSTR_OK, b_cleanup );
-		debug_v( "File path is: %s", bdata( b1 ) );
 		file = fopen( bdata( b1 ), "w" );
 		check( file, b_cleanup );
 		rc = fwrite( f[i]->data, f[i]->slen, 1, file );
