@@ -14,3 +14,8 @@ FRA_VARIABLES(
 
 neki
 
+int init_req() {
+	req = malloc( sizeof( req_t ) );
+	FRA_STORE( req->store, namespace_is_this );
+}
+
