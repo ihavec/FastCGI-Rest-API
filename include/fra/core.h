@@ -4,6 +4,11 @@
 
 
 
+#include <fra/core_helper.h>
+
+
+
+
 /**
  * Main request type ( opaque/private )
  */
@@ -41,24 +46,33 @@ typedef struct fra_endpoint fra_endpoint_t;
 #define fra_cp( request, name ) fra( request, name, char * )
 
 /**
- * Main macro for registering variables of an endpoint,
- * that can later be used in any request thrown at that exact enpoint.
+ * Main macro for registering variables for an endpoint,
+ * that can later be used in any request thrown at that exact endpoint.
  */
 #define fra_reg( endpoint, name, type ) fra_register( endpoint, name, #type, sizeof( type ) )
 
-
-
-// Helper functions for macros.
+/**
+ * Available hooks
+ */
+enum fra_hook_type {
+	FRA_REQ_CREATE, /**< Called when a new fra_req_t is allocated to handle a request.
+			  Use it to initialize variables */
+	FRA_REQ_NEW /**< Called when a new request comes in for the specified endpoint.
+		      Use it to reset the variables if you need,
+		      or for authentication, ... */
+};
 
 /**
- * Safer when used via the fra() macro then directly
+ * Register a new callback to be called at a specific part of the library.
+ * Normal authentication hooks use priority 10.0f.
+ * Higher priority means later execution.
  */
-void * fra_var_get( fra_req_t * request, char * name, const char * type );
-
-/**
- * Better used via the fra_req() macro then directly
- */
-int fra_register( fra_endpoint_t * endpoint, char * name, const char * type, size_t size );
+int fra_endpoint_hook_register(
+		fra_endpoint_t * endpoint,
+		enum fra_hook_type type,
+		int (*callback)( fra_req_t * ),
+		float priority
+		);
 
 
 

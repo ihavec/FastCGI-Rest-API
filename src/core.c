@@ -62,7 +62,27 @@ int fra_p_req_init( fra_endpoint_t * e ) {
 	req->store = malloc( e->store_size );
 	/* ... */
 
+	call_user_on_req_init_hook( e );
+
 	return 0;
+
+}
+
+//user hooks that can be registered to endpoint (with float priority value for before or after (authentication uses this with prioriti 10.0f)):
+//on request created
+//on request reset (request reused for another request)
+
+int user_on_req_init_hook_example( fra_req_t * req ) {
+
+	fra_i( req, "rc" ) = 0;
+
+	fra( req, "message", bstring ) = bfromcstr( "Hello world!" );
+	check( fra( req, "message", bstring ), final_cleanup );
+
+	return 0; //must return 0 or else the request is not created...
+
+final_cleanup:
+	return -1;
 
 }
 
@@ -91,6 +111,29 @@ void * fra_var_get( fra_req_t * request,  char * name, const char * type ) {
 
 final_cleanup:
 	return NULL;
+
+}
+
+fra_endpoint_t * fra_endpoint_new() {
+	return (fra_endpoint_t *)malloc( sizeof( fra_endpoint_t ) );
+}
+
+int fra_endpoint_destroy( fra_endpoint_t * e ) {
+
+	free( e );
+
+	return 0;
+
+}
+
+int fra_endpoint_hook_register(
+		fra_endpoint_t * endpoint,
+		enum fra_hook_type type,
+		int (*callback)( fra_req_t * ),
+		float priority
+		) {
+
+	return 0;
 
 }
 

@@ -1,0 +1,29 @@
+version: "2"
+services: 
+  nginx:
+    image: nginx
+    ports: 
+      - "443:443"
+    volumes: 
+      - ./container_nginx_conf.d:/etc/nginx/conf.d
+      - ./container_nginx_ssl:/etc/nginx/ssl
+    depends_on:
+      - fra-server
+    links:
+      - fra-server
+  fra-server: 
+    build: .
+    image: fra-server
+    container_name: fra-server
+    volumes: 
+      - .:/fra-server
+    depends_on: 
+      - mariadb
+    links:
+      - mariadb
+    environment:
+      - MYSQL_ROOT_PASSWORD=UfedsuskyughjeypGoyb
+  mariadb:
+    image: mariadb
+    environment:
+      - MYSQL_ROOT_PASSWORD=UfedsuskyughjeypGoyb
