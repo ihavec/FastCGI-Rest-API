@@ -4,11 +4,6 @@
 
 
 
-#include <fra/core_helper.h>
-
-
-
-
 /**
  * Main request type ( opaque/private )
  */
@@ -73,6 +68,8 @@ int fra_endpoint_hook_register(
 		int (*callback)( fra_req_t * ),
 		float priority
 		);
+
+#include <fra/core_helper.h>
 
 
 

@@ -1,4 +1,4 @@
-NAME = fra-server
+NAME = libfra.a
 
 COMPILER_OPTIONS := -Wall -Wextra -pedantic -std=gnu99 -DJSMN_PARENT_LINKS -DJSMN_STRICT -DJJP_LOG
 

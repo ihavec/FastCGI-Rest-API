@@ -1,18 +1,22 @@
 #include <fra/core.h>
 
+#include "var.h"
+
 #include <stddef.h>
 #include <bstrlib.h>
 
 
 
 
-struct fra_req {
-	void * store;
-};
-
 struct fra_endpoint {
+	bstring name;
 	size_t store_size;
 	fra_p_hashtable_t store_map;
+};
+
+struct fra_req {
+	void * store;
+	fra_endpoint_t * endpoint;
 };
 
 int fra_register( fra_endpoint_t * endpoint, char * name, const char * type, size_t size ) {
@@ -58,7 +62,11 @@ final_cleanup:
 
 int fra_p_req_init( fra_endpoint_t * e ) {
 
+	fra_req_t * req;
+
+
 	/* ... */
+	req = malloc( sizeof( fra_req_t ) );
 	req->store = malloc( e->store_size );
 	/* ... */
 

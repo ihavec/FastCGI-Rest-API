@@ -3,6 +3,10 @@
 
 
 
+#include <stddef.h>
+
+
+
 
 /**
  * Helper macros and functions used in core.h that shouldn't be used directly by the user.
