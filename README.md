@@ -1,6 +1,24 @@
 # FastCGI Rest API written in C
+
+## CURRENTLY STILL NOTHING USEFUL. IN DEVELOPMENT ...
+
 ## Goals
 This library can be used to write fastcgi rest apis with mariadb (mysql) and libcurl support.
+
+## Implementation
+The library provides 2 main opaque types, `fra_req_t *` and `fra_endpoint_t *`. The first one represents the current request  
+and the second one represents an endpoint.  
+Hooks ( callbacks ) can then be attached that are triggered in a specific state of an endpoint or an request.  
+Global hooks can also be created.  
+You can attach your own variables to an endpoint or globally to all endpoints.  
+Malloc is then called only once for all the variables, when a new request comes in and there are no left overs from previous requests.  
+This is all that the core.h provides.  
+Then there are a few plugins, that use the memory management and hooks that the core.h provides to extend the user experience.  
+mysql.h provides functions to make asynchronous mysql calls.  
+curl.h provides functions to make asynchronous curl calls.  
+auth\_basic.h provides functions for basic user authentication.  
+...  
+(TODO other authentication plugins)  
 
 ## Example how to run the application
 

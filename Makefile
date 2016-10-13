@@ -22,11 +22,14 @@ TARGET = $(BUILD_DIR)/$(NAME)
 #The Target Build
 all: $(TARGET)
 
+
 dev: CFLAGS = $(ORIGI_CFLAGS) -g $(COMPILER_OPTIONS) $(INCLUDE_DIRS) $(OPTFLAGS)
 dev: all
 
+$(TARGET): CFLAGS += -fPIC
 $(TARGET): $(OBJECTS)
-	$(CC) $(CFLAGS) $(OBJECTS) $(LDLIBS) -o $(TARGET)
+	ar rcs $@ $(OBJECTS)
+	ranlib $@
 
 $(BUILD_DIR)/%.o: %.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<

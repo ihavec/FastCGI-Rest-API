@@ -1,4 +1,4 @@
-#!/bin/ash
+#!/bin/sh
 
 BUILD_DIR=$1
 shift
