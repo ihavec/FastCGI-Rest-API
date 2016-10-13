@@ -13,10 +13,6 @@
 
 // public functions
 
-int fra_req_register( fra_req_t * request, char * name, const char * type, size_t size ) {
-	return -1;
-}
-
 int fra_endpoint_register( fra_endpoint_t * endpoint, char * name, const char * type, size_t size ) {
 
         int rc;

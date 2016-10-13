@@ -24,7 +24,7 @@ int fra_endpoint_destroy( fra_endpoint_t * e ) {
 
 int fra_endpoint_hook_register(
 		fra_endpoint_t * endpoint,
-		enum fra_endpoint_hook_type type,
+		enum fra_hook_type type,
 		int (*callback)( fra_req_t * ),
 		float priority
 		) {

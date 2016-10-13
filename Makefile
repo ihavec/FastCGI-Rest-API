@@ -9,7 +9,7 @@ LDLIBS = $(OPTSLIBS)
 BUILD_DIR = build
 
 
-INCLUDE_DIRS = -Isrc -Iinclude
+INCLUDE_DIRS = -Isrc -Iinclude -Ilibs/bstrlib
 LDLIBS += -lfcgi -lcurl -lmysqlclient
 
 SOURCES = $(wildcard src/**/**/*.c src/**/**/*.c src/**/*.c src/*.c)

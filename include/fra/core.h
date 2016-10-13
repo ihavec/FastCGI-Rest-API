@@ -41,42 +41,24 @@ typedef struct fra_endpoint fra_endpoint_t;
 #define fra_cp( request, name ) fra( request, name, char * )
 
 /**
- * Macro for registering variables to a request,
- * that can later be used in any request.
+ * Main macro for registering variables to an endpoint,
+ * Later they can be used in any request that has the specified endpoint.
  */
-#define fra_req_reg( request, name, type ) fra_req_register( request, name, #type, sizeof( type ) )
-
-/**
- * Macro for registering variables to an endpoint,
- * Later they can be used in any request that has the specified enpoint already set.
- * (In all fra_enpoint_hook_types)
- */
-#define fra_reg( endpoint, name, type ) fra_endpoint_register( endpoint, name, #type, sizeof( type ) )
+#define fra_reg( endpoint, name, type ) fra_register( endpoint, name, #type, sizeof( type ) )
 
 /**
  * Available hooks
  */
 enum fra_glob_hook_type {
 	FRA_REQ_INCOMING /**< Called when a new request has come in but before any allocation of
-			   the fra_req_t * object or processing is done */
+			    the fra_req_t * object or processing is done */
 };
 
-enum fra_req_hook_type {
-	FRA_REQ_ALLOCATED, /**< Called when a new fra_req_t is allocated to handle a request.
-			     Use it to initialize variables shared between all requests and register file descriptors ...
-			     The mysql plugin uses it for example to create a new mysql connection for each request and register
-			     the connection's file descriptor for async database querying */
-	FRA_REQ_BABY, /**< Called before the FCGX_Request object gets initialized and fra_req_fcgx() still returns NULL.
-			Here headers or body or similar is not yet available! */
-	FRA_REQ_BEFORE_ENDPOINT /**< Called each time a new request comes in and FCGX_Request is already initialized and available.
-				  Use it to reset the variables if you need, or for authentication, ... */
-};
-
-enum fra_endpoint_hook_type {
+enum fra_hook_type {
 	FRA_REQ_CREATED, /**< Called when a new fra_req_t is allocated to handle a request.
-			   Use it to initialize variables specific to the specified endpoint,
-			   register file descriptors for that endpoint ... */
-	FRA_REQ_NEW, /**< Called when a new request comes in for the specified endpoint.
+			   Use it to initialize variables,
+			   register file descriptors ... */
+	FRA_REQ_NEW, /**< Called when a new request comes in.
 		       Use it to reset the variables if you need,
 		       or for authentication, and for handling the actual request ... */
 };
@@ -97,14 +79,14 @@ int fra_glob_hook_register(
 
 int fra_req_hook_register(
 		fra_req_t * request,
-		enum fra_req_hook_type type,
+		enum fra_hook_type type,
 		int (*callback)( fra_req_t * req ),
 		float priority
 		);
 
 int fra_endpoint_hook_register(
 		fra_endpoint_t * endpoint,
-		enum fra_endpoint_hook_type type,
+		enum fra_hook_type type,
 		int (*callback)( fra_req_t * req ),
 		float priority
 		);
