@@ -13,7 +13,7 @@
 
 // public functions
 
-int fra_endpoint_register( fra_endpoint_t * endpoint, char * name, const char * type, size_t size ) {
+int fra_register( fra_endpoint_t * endpoint, char * name, const char * type, size_t size ) {
 
         int rc;
         fra_p_var_t * var;
