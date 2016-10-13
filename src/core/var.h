@@ -1,5 +1,5 @@
-#ifndef fra_p_var_h
-#define fra_p_var_h
+#ifndef fra_p_core_var_h
+#define fra_p_core_var_h
 
 
 #include <stddef.h>

@@ -2,11 +2,13 @@
 #include <fra/core.h>
 
 #include "dbg.h"
+#include "req.h"
 
 #include <poll.h>
 #ifndef NO_PTHREADS
 #include <pthread.h>
 #endif
+#include <stdlib.h>
 
 
 
@@ -42,7 +44,6 @@ static pthread_mutex_t main_poll_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static int main_poll_maybe_grow() {
 
-	int rc;
 	void * tmp;
 	int new_max;
 

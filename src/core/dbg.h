@@ -49,6 +49,12 @@
 
 #define check(A, B) if(!(A)) { log_err_empty(); errno=0; goto B; }
 
+#define check_msg(A, B, M ) if(!(A)) { \
+	jak_print( "[ERROR] (%s:%d: errno: %s) " M "\n", __FILE__, __LINE__, clean_errno() ); \
+			errno=0; goto B; }
+#define check_msg_v(A, B, M, ...) if(!(A)) { \
+	jak_print( "[ERROR] (%s:%d: errno: %s) " M "\n", __FILE__, __LINE__, clean_errno(), ##__VA_ARGS__ ); \
+			errno=0; goto B; }
 
 
 
