@@ -48,9 +48,9 @@ static int main_poll_maybe_grow() {
 	int new_max;
 
 
-	check( main_poll_len <= main_poll_max_len, final_cleanup );
+	check( main_poll_len < main_poll_max_len, final_cleanup );
 
-	if( main_poll_len == main_poll_max_len ) {
+	if( main_poll_len == main_poll_max_len - 1 ) {
 
 		new_max = (int)( main_poll_max_len * 1.618f );
 		check( new_max > main_poll_max_len, final_cleanup );

@@ -32,7 +32,7 @@ int fra_register( fra_endpoint_t * endpoint, char * name, const char * type, siz
 
         var->position = endpoint->store_size;
 
-        rc = fra_p_hashtable_set( endpoint->store_map, name, var );
+        rc = fra_p_var_ht_set( endpoint->store_map, var );
         check_msg( rc != 1, type_cleanup, "You have already registered a variable with the same name for this endpoint." );
         check( rc == 0, type_cleanup );
 
@@ -54,13 +54,13 @@ final_cleanup:
 
 }
 
-void * fra_var_get( fra_req_t * request,  char * name, const char * type ) {
+void * fra_var_get( fra_req_t * request,  char * name, int name_len, const char * type ) {
 
 	void * position;
 	fra_p_var_t * var;
 
 
-	var = fra_p_hashtable_get( request->endpoint->store_map, name );
+	var = fra_p_var_ht_get( request->endpoint->store_map, name, name_len );
 	check_msg_v( var, final_cleanup, "No variable \"%s\" found for endpoint \"%s\"", name, bdata( request->endpoint->name ) );
 	check_msg_v(
 			biseqcstr( var->type, type ) == 0,

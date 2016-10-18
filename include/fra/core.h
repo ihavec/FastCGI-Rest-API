@@ -17,7 +17,7 @@ typedef struct fra_endpoint fra_endpoint_t;
 /**
  * Main macro for getting variables from inside a request.
  */
-#define fra( request, name, type ) ( *( (type *)fra_var_get( request, name, #type ) ) )
+#define fra( request, name, type ) ( *( (type *)fra_var_get( request, name, sizeof( name ), #type ) ) )
 
 /**
  * Utility macros for for getting variables of all native C types and some widely used pointers

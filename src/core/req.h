@@ -3,12 +3,15 @@
 
 #include <fra/core.h>
 
+#include <fcgiapp.h>
+
 
 
 
 #pragma GCC visibility push(hidden)
 
 struct fra_req {
+	FCGX_Request fcgx;
 	void * store;
 	fra_endpoint_t * endpoint;
 };
