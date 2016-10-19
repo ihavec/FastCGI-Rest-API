@@ -1,8 +1,28 @@
-#include <fcgi_stdio.h>
+#include <fra/core.h>
+#include "../src/core/dbg.h"
 
-int main() {
-	 while( FCGI_Accept() >= 0 ) {
-		 printf("Content-type: text/html\r\nStatus: 200 OK\r\n\r\nHello world :)\r\n\r\n");
-	 }
-	 return 0;
+
+
+
+int main( int argc, char * * argv ) {
+
+	int rc;
+
+
+	freopen( argv[1], "w", stdout );
+	freopen( argv[2], "w", stderr );
+
+	debug( "before init" );
+	rc = fra_glob_init();
+	check( rc == 0, final_cleanup );
+
+	debug( "after init" );
+
+	fra_glob_poll();
+
+	return 0;
+
+final_cleanup:
+	return -1;
+
 }

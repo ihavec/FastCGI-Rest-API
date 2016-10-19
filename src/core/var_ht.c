@@ -96,7 +96,7 @@ fra_p_var_t * fra_p_var_ht_get( fra_p_var_ht_t * ht, const char * name, int name
 	i = hash % ht->buck_c;
 
 	for( j = 0; j < ht->buck[i].el_c; j++ ) {
-		if( biseq( ht->buck[i].el[j].name, &name_bstr ) ) return &ht->buck[i].el[j];
+		if( biseq( ht->buck[i].el[j].name, &name_bstr ) == 1 ) return &ht->buck[i].el[j];
 	}
 
 	return NULL;

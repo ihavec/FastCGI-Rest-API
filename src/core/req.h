@@ -16,6 +16,8 @@ struct fra_req {
 	fra_endpoint_t * endpoint;
 };
 
+int fra_p_req_init();
+
 int fra_p_req_handle_new( short revents );
 
 #pragma GCC visibility pop

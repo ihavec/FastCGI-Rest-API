@@ -73,7 +73,7 @@ void * fra_var_get( fra_req_t * request,  char * name, int name_len, const char 
 			type
 		 );
 
-	position = request->store + var->position;
+	position = (char *)request->store + var->position;
 
 	return position;
 

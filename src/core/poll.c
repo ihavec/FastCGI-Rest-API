@@ -48,6 +48,7 @@ static int main_poll_maybe_grow() {
 	int new_max;
 
 
+	debug( "m_grow() call" );
 	check( main_poll_len < main_poll_max_len, final_cleanup );
 
 	if( main_poll_len == main_poll_max_len - 1 ) {
@@ -81,6 +82,7 @@ static int fd_add( int fd, short events, int (*cb)( short ), int (*req_cb)( fra_
 	int rc;
 
 
+	debug( "fd_add called" );
 #ifndef NO_PTHREADS
 	rc = pthread_mutex_lock( &main_poll_lock );
 	check( rc == 0, final_cleanup );
@@ -102,6 +104,8 @@ static int fd_add( int fd, short events, int (*cb)( short ), int (*req_cb)( fra_
 	}
 
 	main_poll_len++;
+
+	pthread_mutex_unlock( &main_poll_lock );
 
 	return 0;
 
@@ -126,6 +130,7 @@ int fra_p_poll_init() {
 	int rc;
 
 
+	debug( "init called" );
 #ifndef NO_PTHREADS
 	rc = pthread_mutex_lock( &main_poll_lock );
 	check( rc == 0, final_cleanup );
@@ -142,21 +147,17 @@ int fra_p_poll_init() {
 		main_poll_len = 0;
 		main_poll_max_len = 10;
 
+		initialized = 1;
+
+#ifndef NO_PTHREADS
+		rc = pthread_mutex_unlock( &main_poll_lock );
+		check( rc == 0, final_cleanup );
+#endif
+
 		rc = fra_glob_fd_add( 0, POLLIN, fra_p_req_handle_new );
 		check( rc == 0, callbacks_cleanup );
 
-		initialized = 1;
-
-	} else {
-
-		check( 0, unlock_cleanup );
-
-	}
-
-#ifndef NO_PTHREADS
-	rc = pthread_mutex_unlock( &main_poll_lock );
-	check( rc == 0, final_cleanup );
-#endif
+	} else { check( 0, unlock_cleanup ); }
 
 	return 0;
 
@@ -196,6 +197,7 @@ int fra_glob_poll() {
 	int i;
 
 
+	debug( "before lock" );
 #ifndef NO_PTHREADS
 	rc = pthread_mutex_lock( &main_poll_lock );
 	check( rc == 0, final_cleanup );
@@ -203,7 +205,12 @@ int fra_glob_poll() {
 
 	check( initialized, unlock_cleanup );
 
+	debug( "before poll" );
 	while( 1 ) {
+
+		debug_v( "Polling for %d file descriptors:", main_poll_len );
+
+		for( int j = 0; j < main_poll_len; j++ ) debug_v( "fd is %d", main_poll[j].fd );
 
 		rc = poll( main_poll, main_poll_len, -1 );
 		check( rc > 0, unlock_cleanup );

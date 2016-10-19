@@ -15,6 +15,13 @@ typedef struct fra_req fra_req_t;
 typedef struct fra_endpoint fra_endpoint_t;
 
 /**
+ * Global init function. It is not thread safe! Should be called at least one time
+ * before calling any other functions from the library.
+ * \Returns 0 on success, 1 if it was already called previously, and -1 on error.
+ */
+int fra_glob_init();
+
+/**
  * Main macro for getting variables from inside a request.
  */
 #define fra( request, name, type ) ( *( (type *)fra_var_get( request, name, sizeof( name ), #type ) ) )

@@ -9,8 +9,8 @@ LDLIBS = $(OPTSLIBS)
 BUILD_DIR = build
 
 
-INCLUDE_DIRS = -Isrc -Iinclude
-LDLIBS += -lfcgi -lcurl -lmysqlclient
+INCLUDE_DIRS = -I../include
+LDLIBS += ../build/libfra.a -lfcgi -lcurl -lmysqlclient
 
 SOURCES = $(wildcard **/**/*.c **/*.c *.c)
 OBJECTS = $(patsubst %.c,$(BUILD_DIR)/%.o,$(SOURCES))

@@ -9,6 +9,7 @@ docker-compose build
 
 docker-compose up -d
 
+docker exec -ti fra-server ash -c "cd /fra-server && make ${1}"
 docker exec -ti fra-server ash -c "cd /fra-server/example && make ${1}"
 docker-compose restart
 
