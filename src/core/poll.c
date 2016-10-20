@@ -3,6 +3,7 @@
 
 #include "dbg.h"
 #include "req.h"
+#include "config.h"
 
 #include <poll.h>
 #ifndef NO_PTHREADS
@@ -53,7 +54,7 @@ static int main_poll_maybe_grow() {
 
 	if( main_poll_len == main_poll_max_len - 1 ) {
 
-		new_max = (int)( main_poll_max_len * 1.618f );
+		new_max = (int)( main_poll_max_len * FRA_CORE_DYNAMIC_ARRAYS_GROWTH_FACTOR );
 		check( new_max > main_poll_max_len, final_cleanup );
 
 		tmp = realloc( main_poll, new_max * sizeof( struct pollfd ) );
@@ -138,14 +139,14 @@ int fra_p_poll_init() {
 
 	if( ! initialized ) {
 
-		main_poll = malloc( 10 * sizeof( struct pollfd ) );
+		main_poll = malloc( FRA_CORE_DYNAMIC_ARRAYS_INITIAL_SIZE * sizeof( struct pollfd ) );
 		check( main_poll, unlock_cleanup );
 
-		callbacks = malloc( 10 * sizeof( int ) );
+		callbacks = malloc( FRA_CORE_DYNAMIC_ARRAYS_INITIAL_SIZE * sizeof( int ) );
 		check( callbacks, main_poll_cleanup );
 
 		main_poll_len = 0;
-		main_poll_max_len = 10;
+		main_poll_max_len = FRA_CORE_DYNAMIC_ARRAYS_INITIAL_SIZE;
 
 		initialized = 1;
 

@@ -10,10 +10,14 @@
 
 #pragma GCC visibility push(hidden)
 
+
 struct fra_req {
+	char fcgx_defined;
 	FCGX_Request fcgx;
-	void * store;
+	fra_req_t * next;
+	void * req_store;
 	fra_endpoint_t * endpoint;
+	void * endpoint_store;
 };
 
 int fra_p_req_init();

@@ -3,6 +3,7 @@
 #include "var.h"
 
 #include "murmur3.h"
+#include <stdint.h>
 #include <stdlib.h>
 
 
@@ -79,19 +80,18 @@ final_cleanup:
 
 }
 
-fra_p_var_t * fra_p_var_ht_get( fra_p_var_ht_t * ht, const char * name, int name_size ) {
+fra_p_var_t * fra_p_var_ht_get( fra_p_var_ht_t * ht, const char * name, int name_len, uint32_t hash ) {
 
-	uint32_t hash;
 	unsigned int i;
 	int j;
 	struct tagbstring name_bstr;
 
 
-	name_bstr.mlen = -1;
-	name_bstr.slen = name_size - 1;
-	name_bstr.data = (unsigned char *)name;
+	check( ht, final_cleanup );
 
-	MurmurHash3_x86_32( (void *)name, name_size, 55, &hash );
+	name_bstr.mlen = -1;
+	name_bstr.slen = name_len - 1;
+	name_bstr.data = (unsigned char *)name;
 
 	i = hash % ht->buck_c;
 
@@ -99,6 +99,9 @@ fra_p_var_t * fra_p_var_ht_get( fra_p_var_ht_t * ht, const char * name, int name
 		if( biseq( ht->buck[i].el[j].name, &name_bstr ) == 1 ) return &ht->buck[i].el[j];
 	}
 
+	return NULL;
+
+final_cleanup:
 	return NULL;
 
 }
