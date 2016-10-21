@@ -57,8 +57,9 @@ int fra_glob_init();
  * Available hooks
  */
 enum fra_glob_hook_type {
-	FRA_REQ_INCOMING /**< Called when a new request has come in but before any allocation of
+	FRA_REQ_INCOMING, /**< Called when a new request has come in but before any allocation of
 			    the fra_req_t * object or processing is done */
+	FRA_GLOB_HOOK_COUNT
 };
 
 enum fra_hook_type {
@@ -68,6 +69,7 @@ enum fra_hook_type {
 	FRA_REQ_NEW, /**< Called when a new request comes in.
 		       Use it to reset the variables if you need,
 		       or for authentication, and for handling the actual request ... */
+	FRA_HOOK_COUNT
 };
 
 /**
