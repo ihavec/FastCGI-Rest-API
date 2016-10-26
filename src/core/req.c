@@ -5,6 +5,7 @@
 #include "endpoint.h"
 #include "dbg.h"
 #include "config.h"
+#include "hook.h"
 
 #include <stdlib.h>
 #include <poll.h>
@@ -44,6 +45,9 @@ static fra_req_t * get_req() {
 
 		cur->req_store = (void *)( (char *)cur + sizeof( fra_req_t ) );
 
+		rc = fra_p_req_hook_execute( cur, FRA_REQ_CREATED );
+		check( rc == 0, cur_cleanup );
+
 		all_count++;
 
 	} else {
@@ -60,10 +64,8 @@ static fra_req_t * get_req() {
 
 	return cur;
 
-#ifndef NO_PTHREADS
 cur_cleanup:
 	free( cur );
-#endif
 
 unlock_cleanup:
 #ifndef NO_PTHREADS
@@ -86,6 +88,9 @@ static int req_maybe_free( fra_req_t * req ) {
 
 	if( ( all_count - empty_count ) * FRA_CORE_WAITING_REQUESTS_GROWTH_FACTOR > all_count ) {
 
+		rc = fra_p_req_hook_execute( req, FRA_REQ_FREE );
+		check( rc == 0, unlock_cleanup );
+
 		free( req );
 		all_count--;
 
@@ -104,10 +109,14 @@ static int req_maybe_free( fra_req_t * req ) {
 
 	return 0;
 
+unlock_cleanup:
 #ifndef NO_PTHREADS
+	rc = pthread_mutex_unlock( &empty_req_lock );
+	check( rc == 0, final_cleanup );
+
 final_cleanup:
-	return -1;
 #endif
+	return -1;
 
 }
 
@@ -151,17 +160,23 @@ int fra_p_req_handle_new( short revents ) {
 
 	check( revents & POLLIN, final_cleanup );
 
+	rc = fra_p_glob_hook_execute( FRA_REQ_INCOMING );
+	check( rc == 0, final_cleanup );
+
 	req = get_req();
 	check( req, final_cleanup );
 
 	reset_req( req );
+
+	rc = fra_p_req_hook_execute( req, FRA_REQ_NEW );
+	check( rc == 0, req_cleanup );
 
 	/* ... run all the hooks before fcgx has accepted anything ( for firewalls ... ) ... */
 
 	FCGX_InitRequest( &req->fcgx, 0, 0 );
 
 	rc = FCGX_Accept_r( &req->fcgx );
-	check( rc >= 0, final_cleanup );
+	check( rc >= 0, req_cleanup );
 
 	req->fcgx_defined = 1;
 
@@ -188,6 +203,10 @@ int fra_p_req_handle_new( short revents ) {
 	check( rc == 0, final_cleanup );
 
 	return 0;
+
+req_cleanup:
+	rc = req_maybe_free( req );
+	check( rc == 0, final_cleanup );
 
 final_cleanup:
 	return -1;

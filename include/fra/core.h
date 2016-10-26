@@ -69,6 +69,9 @@ enum fra_hook_type {
 	FRA_REQ_NEW, /**< Called when a new request comes in.
 		       Use it to reset the variables if you need,
 		       or for authentication, and for handling the actual request ... */
+	FRA_REQ_FREE, /**< Called right before the fra_req_t is deallocated.
+			Use it to free memory if you dynamically allocated some
+			in FRA_REQ_CREATED. */
 	FRA_HOOK_COUNT
 };
 
@@ -81,13 +84,12 @@ enum fra_hook_type {
  * if it is greater than 0 or to 500 otherwise.
  */
 int fra_glob_hook_register(
-		enum fra_glob_hook_type,
+		enum fra_glob_hook_type type,
 		int (*callback)(),
 		float priority
 		);
 
 int fra_req_hook_register(
-		fra_req_t * request,
 		enum fra_hook_type type,
 		int (*callback)( fra_req_t * req ),
 		float priority
