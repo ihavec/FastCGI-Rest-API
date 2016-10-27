@@ -129,6 +129,8 @@ void * fra_var_get( fra_req_t * request,  char * name, int name_len, const char 
 	uint32_t hash;
 
 
+	name_len = name_len - 1;
+	check_msg( name_len > 0, final_cleanup, "Variable name can't be an empty string." );
 
 	MurmurHash3_x86_32( (void *)name, name_len, 55, &hash );
 
@@ -137,7 +139,7 @@ void * fra_var_get( fra_req_t * request,  char * name, int name_len, const char 
 	if( var ) {
 
 		check_msg_v(
-				biseqcstr( var->type, type ) == 0,
+				biseqcstr( var->type, type ) == 1,
 				final_cleanup,
 				"Wrong type specified when getting global variable \"%s\". "
 				"Correct type is \"%s\" but you wrote \"%s\"",
@@ -156,7 +158,7 @@ void * fra_var_get( fra_req_t * request,  char * name, int name_len, const char 
 		check_msg_v( var, final_cleanup, "No variable \"%s\" found for endpoint \"%s\"", name, bdata( request->endpoint->name ) );
 
 		check_msg_v(
-				biseqcstr( var->type, type ) == 0,
+				biseqcstr( var->type, type ) == 1,
 				final_cleanup,
 				"Wrong type specified when getting variable \"%s\" from endpoint \"%s\"\n"
 				"Correct type is \"%s\" but you wrote \"%s\"",

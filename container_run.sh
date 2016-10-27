@@ -5,6 +5,6 @@
 	make dev
 #fi
 
-sleep 5000
+sleep 50000
 
 #spawn-fcgi -p 8008 -n -- /fra-server/example/build/fra-server-example /fra-server/example/build/frar-server-example.log /fra-server/example/build/fra-server-example.err

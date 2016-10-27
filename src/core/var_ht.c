@@ -54,7 +54,15 @@ int fra_p_var_ht_set( fra_p_var_ht_t * ht, fra_p_var_t * var ) {
 
 	MurmurHash3_x86_32( (void *)var->name->data, var->name->slen, 55, &hash );
 
+	debug_v( "name len is %d", var->name->slen );
+	for( int i = 0; var->name->data[i] != '\0'; i++ ) debug_v( "name[%d]=%d", i, (int)var->name->data[i] );
+
+	debug_v( "name for set was \"%.*s\"", var->name->slen, var->name->data );
+	debug_v( "Hash for set was %d", hash );
+
 	i = hash % ht->buck_c;
+
+	debug_v( "And i was %d", i );
 
 	tmp = realloc( ht->buck[i].el, ( ht->buck[i].el_c + 1 ) * sizeof( fra_p_var_t ) );
 	check( tmp, final_cleanup );
@@ -90,11 +98,14 @@ fra_p_var_t * fra_p_var_ht_get( fra_p_var_ht_t * ht, const char * name, int name
 	check( ht, final_cleanup );
 
 	name_bstr.mlen = -1;
-	name_bstr.slen = name_len - 1;
+	name_bstr.slen = name_len;
 	name_bstr.data = (unsigned char *)name;
 
 	i = hash % ht->buck_c;
 
+	debug_v( "name for get was \"%.*s\"", name_len, name );
+	debug_v( "hash for get was %d", hash );
+	debug_v( "And i was %d", i );
 	for( j = 0; j < ht->buck[i].el_c; j++ ) {
 		if( biseq( ht->buck[i].el[j].name, &name_bstr ) == 1 ) return &ht->buck[i].el[j];
 	}
