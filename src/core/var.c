@@ -21,33 +21,16 @@
 static pthread_mutex_t glob_store_map_lock = PTHREAD_MUTEX_INITIALIZER;
 #endif
 static fra_p_var_ht_t * glob_store_map;
+static size_t glob_store_size;
 
-
-
-
-// semi-private functions
-
-int pma_p_var_init( int var_count ) {
-
-	glob_store_map = fra_p_var_ht_create( var_count );
-	check( glob_store_map, final_cleanup );
-
-	return 0;
-
-final_cleanup:
-	return -1;
-
-}
-
-// public functions
-
-int fra_register( fra_endpoint_t * endpoint, char * name, const char * type, size_t size ) {
+static int reg( fra_p_var_ht_t * store_map, size_t * store_size, char * name, const char * type, size_t size ) {
 
         int rc;
+
         fra_p_var_t * var;
 
 
-        check( endpoint->store_size < SIZE_MAX - size, final_cleanup );
+        check( *store_size < SIZE_MAX - size, final_cleanup );
 
         var = malloc( sizeof( fra_p_var_t ) );
         check( var, final_cleanup );
@@ -58,13 +41,13 @@ int fra_register( fra_endpoint_t * endpoint, char * name, const char * type, siz
         var->type = bfromcstr( type );
         check( var->type, name_cleanup );
 
-        var->position = endpoint->store_size;
+        var->position = *store_size;
 
-        rc = fra_p_var_ht_set( endpoint->store_map, var );
-        check_msg( rc != 1, type_cleanup, "You have already registered a variable with the same name for this endpoint." );
+        rc = fra_p_var_ht_set( store_map, var );
+        check_msg( rc != 1, type_cleanup, "You have already registered a variable with the same name." );
         check( rc == 0, type_cleanup );
 
-        endpoint->store_size += size;
+        *store_size += size;
 
         return 0;
 
@@ -79,6 +62,62 @@ var_cleanup:
 
 final_cleanup:
         return -1;
+
+}
+
+
+
+
+// semi-private functions
+
+int fra_p_var_init( int var_count ) {
+
+	glob_store_map = fra_p_var_ht_create( var_count );
+	check( glob_store_map, final_cleanup );
+
+	return 0;
+
+final_cleanup:
+	return -1;
+
+}
+
+// public functions
+
+int fra_endpoint_register( fra_endpoint_t * endpoint, char * name, const char * type, size_t size ) {
+
+	return reg( endpoint->store_map, &endpoint->store_size, name, type, size );
+
+}
+
+int fra_req_register( char * name, const char * type, size_t size ) {
+
+	int rc;
+
+
+#ifndef NO_PTHREADS
+	rc = pthread_mutex_lock( &glob_store_map_lock );
+	check( rc == 0, final_cleanup );
+#endif
+
+	rc = reg( glob_store_map, &glob_store_size, name, type, size );
+	check( rc == 0, unlock_cleanup );
+
+#ifndef NO_PTHREADS
+	rc = pthread_mutex_unlock( &glob_store_map_lock );
+	check( rc == 0, final_cleanup );
+#endif
+
+	return 0;
+
+unlock_cleanup:
+#ifndef NO_PTHREADS
+	rc = pthread_mutex_unlock( &glob_store_map_lock );
+	check( rc == 0, final_cleanup );
+
+final_cleanup:
+#endif
+	return -1;
 
 }
 
@@ -97,36 +136,40 @@ void * fra_var_get( fra_req_t * request,  char * name, int name_len, const char 
 
 	if( var ) {
 
+		check_msg_v(
+				biseqcstr( var->type, type ) == 0,
+				final_cleanup,
+				"Wrong type specified when getting global variable \"%s\". "
+				"Correct type is \"%s\" but you wrote \"%s\"",
+				name,
+				bdata( var->type ),
+				type
+			   );
+
 		store = request->req_store;
 
 	} else {
 
-		if( request->endpoint ) {
+		check_msg_v( request->endpoint, final_cleanup, "No global variable \"%s\" found.", name );
 
-			var = fra_p_var_ht_get( request->endpoint->store_map, name, name_len, hash );
+		var = fra_p_var_ht_get( request->endpoint->store_map, name, name_len, hash );
+		check_msg_v( var, final_cleanup, "No variable \"%s\" found for endpoint \"%s\"", name, bdata( request->endpoint->name ) );
 
-			if( var ) {
+		check_msg_v(
+				biseqcstr( var->type, type ) == 0,
+				final_cleanup,
+				"Wrong type specified when getting variable \"%s\" from endpoint \"%s\"\n"
+				"Correct type is \"%s\" but you wrote \"%s\"",
+				name,
+				bdata( request->endpoint->name ),
+				bdata( var->type ),
+				type
+			   );
 
-				store = request->endpoint_store;
+		store = request->endpoint_store;
 
-			}
-
-		}
 
 	}
-
-	check_msg_v( var, final_cleanup, "No variable \"%s\" found for endpoint \"%s\"", name, bdata( request->endpoint->name ) );
-
-	check_msg_v(
-			biseqcstr( var->type, type ) == 0,
-			final_cleanup,
-			"Wrong type specified when getting variable \"%s\" from endpoint \"%s\"\n"
-			"Correct type is \"%s\" but you wrote \"%s\"",
-			name,
-			bdata( request->endpoint->name ),
-			bdata( var->type ),
-			type
-		 );
 
 	position = (char *)store + var->position;
 

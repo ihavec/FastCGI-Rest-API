@@ -7,6 +7,8 @@
 static int hello_world( fra_req_t * req ) {
 
 	debug( "Hello world :)" );
+	debug_v( "Behehehehe: %d", fra( req, "buhu", int ) );
+	debug_v( "Behehehehe: %d", fra_i( req, "buhu" ) );
 
 	return 0;
 
@@ -14,7 +16,8 @@ static int hello_world( fra_req_t * req ) {
 
 static int hello_world2( fra_req_t * req ) {
 
-	debug( "Behehehehe" );
+	fra( req, "buhu", int ) = 188;
+	debug_v( "Behehehehe: %d", fra( req, "buhu", int ) );
 
 	return 0;
 
@@ -52,7 +55,6 @@ int main( int argc, char * * argv ) {
 	freopen( argv[1], "w", stdout );
 	freopen( argv[2], "w", stderr );
 
-	debug( "before init" );
 	rc = fra_glob_init();
 	check( rc == 0, final_cleanup );
 
@@ -71,7 +73,8 @@ int main( int argc, char * * argv ) {
 	rc = fra_glob_hook_register( FRA_REQ_INCOMING, hello_world5, 5343.3f );
 	check( rc == 0, final_cleanup );
 
-	debug( "after init" );
+	rc = fra_req_reg( "buhu", int );
+	check( rc == 0, final_cleanup );
 
 	fra_glob_poll();
 

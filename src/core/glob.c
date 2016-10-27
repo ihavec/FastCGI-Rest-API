@@ -4,6 +4,7 @@
 #include "poll.h"
 #include "req.h"
 #include "hook.h"
+#include "var.h"
 
 
 
@@ -22,6 +23,9 @@ int fra_glob_init() {
 	check( rc == 0, final_cleanup );
 
 	rc = fra_p_hook_init();
+	check( rc == 0, final_cleanup );
+
+	rc = fra_p_var_init( 400 );
 	check( rc == 0, final_cleanup );
 
 	return 0;

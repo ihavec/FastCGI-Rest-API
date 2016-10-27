@@ -14,7 +14,9 @@
 
 void * fra_var_get( fra_req_t * request, char * name, int name_len, const char * type );
 
-int fra_register( fra_endpoint_t * endpoint, char * name, const char * type, size_t size );
+int fra_endpoint_register( fra_endpoint_t * endpoint, char * name, const char * type, size_t size );
+
+int fra_req_register( char * name, const char * type, size_t size );
 
 
 

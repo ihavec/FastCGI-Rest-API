@@ -15,7 +15,7 @@ typedef struct {
 	size_t position;
 } fra_p_var_t;
 
-int pma_p_var_init( int var_count );
+int fra_p_var_init( int var_count );
 
 
 #pragma GCC visibility pop

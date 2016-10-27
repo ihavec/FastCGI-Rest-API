@@ -51,7 +51,12 @@ int fra_glob_init();
  * Main macro for registering variables to an endpoint,
  * Later they can be used in any request that has the specified endpoint.
  */
-#define fra_reg( endpoint, name, type ) fra_register( endpoint, name, #type, sizeof( type ) )
+#define fra_reg( endpoint, name, type ) fra_endpoint_register( endpoint, name, #type, sizeof( type ) )
+
+/**
+ * Macro for registering variables that are available in all requests.
+ */
+#define fra_req_reg( name, type ) fra_req_register( name, #type, sizeof( type ) )
 
 /**
  * Available hooks
