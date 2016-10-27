@@ -23,42 +23,20 @@ static pthread_mutex_t glob_store_map_lock = PTHREAD_MUTEX_INITIALIZER;
 static fra_p_var_ht_t * glob_store_map;
 static size_t glob_store_size;
 
-static int reg( fra_p_var_ht_t * store_map, size_t * store_size, char * name, const char * type, size_t size ) {
+static int reg( fra_p_var_ht_t * store_map, size_t * store_size, const char * name, const char * type, size_t size ) {
 
         int rc;
-
-        fra_p_var_t * var;
 
 
         check( *store_size < SIZE_MAX - size, final_cleanup );
 
-        var = malloc( sizeof( fra_p_var_t ) );
-        check( var, final_cleanup );
-
-        var->name = bfromcstr( name );
-        check( var->name, var_cleanup );
-
-        var->type = bfromcstr( type );
-        check( var->type, name_cleanup );
-
-        var->position = *store_size;
-
-        rc = fra_p_var_ht_set( store_map, var );
-        check_msg( rc != 1, type_cleanup, "You have already registered a variable with the same name." );
-        check( rc == 0, type_cleanup );
+        rc = fra_p_var_ht_set( store_map, name, type, *store_size );
+        check_msg( rc != 1, final_cleanup, "You have already registered a variable with the same name." );
+        check( rc == 0, final_cleanup );
 
         *store_size += size;
 
         return 0;
-
-type_cleanup:
-        bdestroy( var->type );
-
-name_cleanup:
-        bdestroy( var->name );
-
-var_cleanup:
-        free( var );
 
 final_cleanup:
         return -1;
@@ -72,7 +50,7 @@ final_cleanup:
 
 int fra_p_var_init( int var_count ) {
 
-	glob_store_map = fra_p_var_ht_create( var_count );
+	glob_store_map = fra_p_var_ht_new( var_count );
 	check( glob_store_map, final_cleanup );
 
 	return 0;
@@ -84,13 +62,13 @@ final_cleanup:
 
 // public functions
 
-int fra_end_var_reg( fra_end_t * endpoint, char * name, const char * type, size_t size ) {
+int fra_end_var_reg( fra_end_t * endpoint, const char * name, const char * type, size_t size ) {
 
 	return reg( endpoint->store_map, &endpoint->store_size, name, type, size );
 
 }
 
-int fra_req_var_reg( char * name, const char * type, size_t size ) {
+int fra_req_var_reg( const char * name, const char * type, size_t size ) {
 
 	int rc;
 
@@ -121,7 +99,7 @@ final_cleanup:
 
 }
 
-void * fra_var_get( fra_req_t * request,  char * name, int name_len, const char * type ) {
+void * fra_var_get( fra_req_t * request,  const char * name, int name_len, const char * type, int type_len ) {
 
 	void * position;
 	fra_p_var_t * var;
@@ -139,7 +117,8 @@ void * fra_var_get( fra_req_t * request,  char * name, int name_len, const char 
 	if( var ) {
 
 		check_msg_v(
-				biseqcstr( var->type, type ) == 1,
+				type_len - 1 == var->type->slen
+				&& biseqcstr( var->type, type ) == 1,
 				final_cleanup,
 				"Wrong type specified when getting global variable \"%s\". "
 				"Correct type is \"%s\" but you wrote \"%s\"",
@@ -158,7 +137,8 @@ void * fra_var_get( fra_req_t * request,  char * name, int name_len, const char 
 		check_msg_v( var, final_cleanup, "No variable \"%s\" found for endpoint \"%s\"", name, bdata( request->endpoint->name ) );
 
 		check_msg_v(
-				biseqcstr( var->type, type ) == 1,
+				type_len - 1 == var->type->slen
+				&& biseqcstr( var->type, type ) == 1,
 				final_cleanup,
 				"Wrong type specified when getting variable \"%s\" from endpoint \"%s\"\n"
 				"Correct type is \"%s\" but you wrote \"%s\"",

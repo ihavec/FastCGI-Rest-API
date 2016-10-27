@@ -168,10 +168,8 @@ int fra_p_req_handle_new( short revents ) {
 
 	reset_req( req );
 
-	rc = fra_p_req_hook_execute( req, FRA_REQ_NEW );
+	rc = fra_p_req_hook_execute( req, FRA_REQ_BEFORE_FCGX );
 	check( rc == 0, req_cleanup );
-
-	/* ... run all the hooks before fcgx has accepted anything ( for firewalls ... ) ... */
 
 	FCGX_InitRequest( &req->fcgx, 0, 0 );
 
@@ -180,13 +178,21 @@ int fra_p_req_handle_new( short revents ) {
 
 	req->fcgx_defined = 1;
 
-	/* ... run all the hooks before endpoint is known ... */
+	rc = fra_p_req_hook_execute( req, FRA_REQ_BEFORE_ENDPOINT );
+	check( rc == 0, req_cleanup );
 
-	/* ... parse url to get endpoint ... */
+	if( ! req->endpoint ) {
 
-	req->endpoint = NULL; // set to the real endpoint ...
+		/* ... parse url to get endpoint ... */
+
+		req->endpoint = NULL; // set to the real endpoint ...
+
+	}
 
 	//req->endpoint_store = fra_p_endpoint_store_get( req->endpoint );
+
+	rc = fra_p_req_hook_execute( req, FRA_REQ_NEW );
+	check( rc == 0, req_cleanup );
 
 	FCGX_FPrintF(
 			req->fcgx.out,

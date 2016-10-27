@@ -2,6 +2,9 @@
 #define fra_core_h
 
 
+#include <fcgiapp.h>
+
+
 
 
 /**
@@ -23,8 +26,9 @@ int fra_glob_init();
 
 /**
  * Main macro for getting variables from inside a request.
+ * Name should be a static string, because we operate on it using sizeof() for better performance.
  */
-#define fra( request, name, type ) ( *( (type *)fra_var_get( request, name, sizeof( name ), #type ) ) )
+#define fra( request, name, type ) ( *( (type *)fra_var_get( request, name, sizeof( name ), #type, sizeof( #type ) ) ) )
 
 /**
  * Utility macros for for getting variables of all native C types and some widely used pointers
@@ -63,7 +67,7 @@ int fra_glob_init();
  */
 enum fra_glob_hook_type {
 	FRA_REQ_INCOMING, /**< Called when a new request has come in but before any allocation of
-			    the fra_req_t * object or processing is done */
+			    the fra_req_t * object or processing is done. */
 	FRA_GLOB_HOOK_COUNT
 };
 
@@ -71,6 +75,11 @@ enum fra_hook_type {
 	FRA_REQ_CREATED, /**< Called when a new fra_req_t is allocated to handle a request.
 			   Use it to initialize variables,
 			   register file descriptors ... */
+	FRA_REQ_BEFORE_FCGX, /**< Called before the fastcgi library has done anything (parsed url, headers ...).
+			       Use it for whatever... :) */
+	FRA_REQ_BEFORE_ENDPOINT, /**< Called before any url parsing is done.
+				   Use it for custom url parsing with the help of fra_req_endpoint_set()
+				   */
 	FRA_REQ_NEW, /**< Called when a new request comes in.
 		       Use it to reset the variables if you need,
 		       or for authentication, and for handling the actual request ... */
@@ -139,9 +148,55 @@ int fra_glob_poll();
 
 /**
  * Create an new empty endpoint that can be used to register variables, add matching urls ...
- * \Return NULL on error or a valid fra_end_t pointer otherwise.
  */
 fra_end_t * fra_end_new();
+
+/**
+ * Free all memory allocated for an endpoint. endpoint arg can be NULL.
+ */
+void fra_end_free( fra_end_t * endpoint );
+
+/**
+ * Add absolute url that should match this endpoint.
+ * Multiple urls can match the same endpoint.
+ */
+int fra_end_url_add( fra_end_t * e, char * url );
+
+/**
+ * Remove absolute url that should match this endpoint.
+ */
+int fra_end_url_del( fra_end_t * e, char * url );
+
+/**
+ * Add HTTP verb that should match this endpoint.
+ */
+int fra_end_verb_add( fra_end_t * e, char * verb );
+
+/**
+ * Remove HTTP verb that should match this endpoint.
+ */
+int fra_end_verb_del( fra_end_t * e, char * verb );
+
+//TODO
+//add support for fra_end_urlformat_add( char * format, ... ) / del( char * format )
+//for urls of kind ...add( "/product/%d", "product_id" ) ( available afterwards from fra_i( req, "product_id" ) )
+//or ...add( "/product/%.*s", "product_name_len", "product_name" ) ( note that product_name is NOT null terminated!!! )
+
+/**
+ * Get FCGX_Request object for this request.
+ */
+FCGX_Request * fra_req_fcgx( fra_req_t * req );
+
+/**
+ * Get the endpoint for this request.
+ */
+fra_end_t * fra_req_endpoint( fra_req_t * r );
+
+/**
+ * Sets the endpoint for this request.
+ * Useful for custom url parsing. From FRA_REQ_BEFORE_ENDPOINT hook for example.
+ */
+int fra_req_endpoint_set( fra_req_t * r, fra_end_t * e );
 
 
 

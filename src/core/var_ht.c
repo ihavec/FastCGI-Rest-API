@@ -20,7 +20,7 @@ struct hashtable {
 	struct bucket * buck;
 };
 
-fra_p_var_ht_t * fra_p_var_ht_create( int bucket_count ) {
+fra_p_var_ht_t * fra_p_var_ht_new( int bucket_count ) {
 
 	fra_p_var_ht_t * ht;
 
@@ -45,22 +45,57 @@ final_cleanup:
 
 }
 
-int fra_p_var_ht_set( fra_p_var_ht_t * ht, fra_p_var_t * var ) {
+void fra_p_var_ht_free( fra_p_var_ht_t * ht ) {
+
+	int i;
+	int j;
+
+
+	if( ht ) {
+
+		for( i = 0; i < ht->buck_c; i++ ) {
+
+			for( j = 0; j < ht->buck[i].el_c; j++ ) {
+
+				bdestroy( ht->buck[i].el[j].name );
+				bdestroy( ht->buck[i].el[j].type );
+
+			}
+
+		}
+
+		free( ht->buck );
+		free( ht );
+
+	}
+
+}
+
+int fra_p_var_ht_set( fra_p_var_ht_t * ht, const char * name, const char * type, size_t pos ) {
 
 	uint32_t hash;
 	unsigned int i;
 	void * tmp;
+	bstring name_str;
 
 
-	MurmurHash3_x86_32( (void *)var->name->data, var->name->slen, 55, &hash );
+	name_str = bfromcstr( name );
+	check( name_str, final_cleanup );
+
+	MurmurHash3_x86_32( (void *)name_str->data, name_str->slen, 55, &hash );
 
 	i = hash % ht->buck_c;
 
 	tmp = realloc( ht->buck[i].el, ( ht->buck[i].el_c + 1 ) * sizeof( fra_p_var_t ) );
-	check( tmp, final_cleanup );
+	check( tmp, name_str_cleanup );
 	ht->buck[i].el = tmp;
 
-	ht->buck[i].el[ ht->buck[i].el_c ] = *var;
+	ht->buck[i].el[ ht->buck[i].el_c ].name = name_str;
+
+	ht->buck[i].el[ ht->buck[i].el_c ].type = bfromcstr( type );
+	check( ht->buck[i].el[ ht->buck[i].el_c ].type, name_str_cleanup );
+
+	ht->buck[i].el[ ht->buck[i].el_c ].position = pos;
 
 	ht->buck[i].el_c++;
 	if( ht->buck[i].el_c > 1 ) ht->collisions_count++;
@@ -74,6 +109,9 @@ int fra_p_var_ht_set( fra_p_var_ht_t * ht, fra_p_var_t * var ) {
 	}
 
 	return 0;
+
+name_str_cleanup:
+	bdestroy( name_str );
 
 final_cleanup:
 	return -1;
