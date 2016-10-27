@@ -1,4 +1,4 @@
-#include "endpoint.h"
+#include "end.h"
 #include <fra/core.h>
 
 #include "var.h"
@@ -12,12 +12,12 @@
 
 // public functions
 
-fra_endpoint_t * fra_endpoint_new() {
+fra_end_t * fra_end_new() {
 
-	fra_endpoint_t * e;
+	fra_end_t * e;
 
 
-	e = malloc( sizeof( fra_endpoint_t ) );
+	e = malloc( sizeof( fra_end_t ) );
 	check( e, final_cleanup );
 
 	e->hooks = calloc( FRA_GLOB_HOOK_COUNT, sizeof( fra_p_hook_t * ) );
@@ -33,7 +33,7 @@ final_cleanup:
 
 }
 
-int fra_endpoint_destroy( fra_endpoint_t * e ) {
+int fra_end_free( fra_end_t * e ) {
 
 	free( e->hooks );
 	free( e );

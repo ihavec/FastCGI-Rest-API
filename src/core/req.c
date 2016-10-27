@@ -2,7 +2,7 @@
 #include <fra/core.h>
 
 #include "var.h"
-#include "endpoint.h"
+#include "end.h"
 #include "dbg.h"
 #include "config.h"
 #include "hook.h"
@@ -222,6 +222,6 @@ FCGX_Request * fra_req_fcgx( fra_req_t * req ) {
 	return req->fcgx_defined ? &req->fcgx : NULL;
 }
 
-fra_endpoint_t * fra_req_endpoint( fra_req_t * req ) {
+fra_end_t * fra_req_endpoint( fra_req_t * req ) {
 	return req->endpoint;
 }

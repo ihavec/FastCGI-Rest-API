@@ -6,7 +6,7 @@
 This library can be used to write fastcgi rest apis with mariadb (mysql) and libcurl support.
 
 ## Implementation
-The library provides 2 main opaque types, `fra_req_t *` and `fra_endpoint_t *`. The first one represents the current request  
+The library provides 2 main opaque types, `fra_req_t *` and `fra_end_t *`. The first one represents the current request  
 and the second one represents an endpoint.  
 Hooks ( callbacks ) can then be attached that are triggered in a specific state of an endpoint or an request.  
 Global hooks can also be created.  

@@ -16,7 +16,7 @@ struct fra_req {
 	FCGX_Request fcgx;
 	fra_req_t * next;
 	void * req_store;
-	fra_endpoint_t * endpoint;
+	fra_end_t * endpoint;
 	void * endpoint_store;
 };
 

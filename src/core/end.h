@@ -1,5 +1,5 @@
-#ifndef fra_p_core_endpoint_h
-#define fra_p_core_endpoint_h
+#ifndef fra_p_core_end_h
+#define fra_p_core_end_h
 
 #include "var_ht.h"
 #include "hook.h"
@@ -12,7 +12,7 @@
 
 #pragma GCC visibility push(hidden)
 
-struct fra_endpoint {
+struct fra_end {
 	bstring name;
 	size_t store_size;
 	fra_p_var_ht_t * store_map;

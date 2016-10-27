@@ -1,7 +1,7 @@
 #include <fra/core.h>
 #include "hook.h"
 
-#include "endpoint.h"
+#include "end.h"
 #include "dbg.h"
 #include "req.h"
 
@@ -274,7 +274,7 @@ int fra_req_hook_register( enum fra_hook_type type, int (*callback)( fra_req_t *
 
 }
 
-int fra_endpoint_hook_register( fra_endpoint_t * endpoint, enum fra_hook_type type, int (*callback)( fra_req_t * ), float priority ) {
+int fra_end_hook_register( fra_end_t * endpoint, enum fra_hook_type type, int (*callback)( fra_req_t * ), float priority ) {
 
 	return hook_register(
 #ifndef NO_PTHREADS

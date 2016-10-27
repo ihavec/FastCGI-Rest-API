@@ -2,7 +2,7 @@
 #include <fra/core.h>
 
 #include "req.h"
-#include "endpoint.h"
+#include "end.h"
 #include "dbg.h"
 #include "murmur3.h"
 
@@ -84,7 +84,7 @@ final_cleanup:
 
 // public functions
 
-int fra_endpoint_register( fra_endpoint_t * endpoint, char * name, const char * type, size_t size ) {
+int fra_end_register( fra_end_t * endpoint, char * name, const char * type, size_t size ) {
 
 	return reg( endpoint->store_map, &endpoint->store_size, name, type, size );
 

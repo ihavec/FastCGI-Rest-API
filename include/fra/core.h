@@ -12,7 +12,7 @@ typedef struct fra_req fra_req_t;
 /**
  * Main endpoint type ( opaque/private )
  */
-typedef struct fra_endpoint fra_endpoint_t;
+typedef struct fra_end fra_end_t;
 
 /**
  * Global init function. It is not thread safe! Should be called at least one time
@@ -51,7 +51,7 @@ int fra_glob_init();
  * Main macro for registering variables to an endpoint,
  * Later they can be used in any request that has the specified endpoint.
  */
-#define fra_reg( endpoint, name, type ) fra_endpoint_register( endpoint, name, #type, sizeof( type ) )
+#define fra_reg( endpoint, name, type ) fra_end_register( endpoint, name, #type, sizeof( type ) )
 
 /**
  * Macro for registering variables that are available in all requests.
@@ -100,8 +100,8 @@ int fra_req_hook_register(
 		float priority
 		);
 
-int fra_endpoint_hook_register(
-		fra_endpoint_t * endpoint,
+int fra_end_hook_register(
+		fra_end_t * endpoint,
 		enum fra_hook_type type,
 		int (*callback)( fra_req_t * req ),
 		float priority
@@ -136,6 +136,12 @@ int fra_glob_fd_add(
  * This function never returns. It polls the file descriptors forever. If there is an error it does return with a non-zero value.
  */
 int fra_glob_poll();
+
+/**
+ * Create an new empty endpoint that can be used to register variables, add matching urls ...
+ * \Return NULL on error or a valid fra_end_t pointer otherwise.
+ */
+fra_end_t * fra_end_new();
 
 
 
