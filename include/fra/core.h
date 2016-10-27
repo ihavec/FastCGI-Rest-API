@@ -51,12 +51,12 @@ int fra_glob_init();
  * Main macro for registering variables to an endpoint,
  * Later they can be used in any request that has the specified endpoint.
  */
-#define fra_reg( endpoint, name, type ) fra_end_register( endpoint, name, #type, sizeof( type ) )
+#define fra_reg( endpoint, name, type ) fra_end_var_reg( endpoint, name, #type, sizeof( type ) )
 
 /**
  * Macro for registering variables that are available in all requests.
  */
-#define fra_req_reg( name, type ) fra_req_register( name, #type, sizeof( type ) )
+#define fra_req_reg( name, type ) fra_req_var_reg( name, #type, sizeof( type ) )
 
 /**
  * Available hooks
@@ -88,19 +88,19 @@ enum fra_hook_type {
  * The default error handler sets the body to empty and the HTTP code of the response to the value returned from the callback
  * if it is greater than 0 or to 500 otherwise.
  */
-int fra_glob_hook_register(
+int fra_glob_hook_reg(
 		enum fra_glob_hook_type type,
 		int (*callback)(),
 		float priority
 		);
 
-int fra_req_hook_register(
+int fra_req_hook_reg(
 		enum fra_hook_type type,
 		int (*callback)( fra_req_t * req ),
 		float priority
 		);
 
-int fra_end_hook_register(
+int fra_end_hook_reg(
 		fra_end_t * endpoint,
 		enum fra_hook_type type,
 		int (*callback)( fra_req_t * req ),

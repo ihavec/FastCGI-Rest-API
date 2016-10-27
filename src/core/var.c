@@ -84,13 +84,13 @@ final_cleanup:
 
 // public functions
 
-int fra_end_register( fra_end_t * endpoint, char * name, const char * type, size_t size ) {
+int fra_end_var_reg( fra_end_t * endpoint, char * name, const char * type, size_t size ) {
 
 	return reg( endpoint->store_map, &endpoint->store_size, name, type, size );
 
 }
 
-int fra_req_register( char * name, const char * type, size_t size ) {
+int fra_req_var_reg( char * name, const char * type, size_t size ) {
 
 	int rc;
 

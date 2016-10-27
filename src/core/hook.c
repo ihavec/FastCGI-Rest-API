@@ -43,7 +43,7 @@ static fra_p_hook_t * * req_hooks;
 	}
 #endif
 
-static int hook_register(
+static int hook_reg(
 #ifndef NO_PTHREADS
 		pthread_mutex_t * lock,
 #endif
@@ -244,9 +244,9 @@ final_cleanup:
 
 // public functions
 
-int fra_glob_hook_register( enum fra_glob_hook_type type, int (*callback)(), float priority ) {
+int fra_glob_hook_reg( enum fra_glob_hook_type type, int (*callback)(), float priority ) {
 
-	return hook_register(
+	return hook_reg(
 #ifndef NO_PTHREADS
 			&glob_hooks_lock,
 #endif
@@ -259,9 +259,9 @@ int fra_glob_hook_register( enum fra_glob_hook_type type, int (*callback)(), flo
 
 }
 
-int fra_req_hook_register( enum fra_hook_type type, int (*callback)( fra_req_t * ), float priority ) {
+int fra_req_hook_reg( enum fra_hook_type type, int (*callback)( fra_req_t * ), float priority ) {
 
-	return hook_register(
+	return hook_reg(
 #ifndef NO_PTHREADS
 			&req_hooks_lock,
 #endif
@@ -274,9 +274,9 @@ int fra_req_hook_register( enum fra_hook_type type, int (*callback)( fra_req_t *
 
 }
 
-int fra_end_hook_register( fra_end_t * endpoint, enum fra_hook_type type, int (*callback)( fra_req_t * ), float priority ) {
+int fra_end_hook_reg( fra_end_t * endpoint, enum fra_hook_type type, int (*callback)( fra_req_t * ), float priority ) {
 
-	return hook_register(
+	return hook_reg(
 #ifndef NO_PTHREADS
 			NULL,
 #endif

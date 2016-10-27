@@ -58,19 +58,19 @@ int main( int argc, char * * argv ) {
 	rc = fra_glob_init();
 	check( rc == 0, final_cleanup );
 
-	rc = fra_req_hook_register( FRA_REQ_NEW, hello_world, 0.1f );
+	rc = fra_req_hook_reg( FRA_REQ_NEW, hello_world, 0.1f );
 	check( rc == 0, final_cleanup );
 
-	rc = fra_glob_hook_register( FRA_REQ_INCOMING, hello_world3, 5343.3f );
+	rc = fra_glob_hook_reg( FRA_REQ_INCOMING, hello_world3, 5343.3f );
 	check( rc == 0, final_cleanup );
 
-	rc = fra_glob_hook_register( FRA_REQ_INCOMING, hello_world4, 543.3f );
+	rc = fra_glob_hook_reg( FRA_REQ_INCOMING, hello_world4, 543.3f );
 	check( rc == 0, final_cleanup );
 
-	rc = fra_req_hook_register( FRA_REQ_NEW, hello_world2, 0.099f );
+	rc = fra_req_hook_reg( FRA_REQ_NEW, hello_world2, 0.099f );
 	check( rc == 0, final_cleanup );
 
-	rc = fra_glob_hook_register( FRA_REQ_INCOMING, hello_world5, 5343.3f );
+	rc = fra_glob_hook_reg( FRA_REQ_INCOMING, hello_world5, 5343.3f );
 	check( rc == 0, final_cleanup );
 
 	rc = fra_req_reg( "buhu", int );
