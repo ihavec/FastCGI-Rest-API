@@ -1,5 +1,5 @@
-#ifndef fra_p_core_hook_h
-#define fra_p_core_hook_h
+#ifndef fra_p_hook_h
+#define fra_p_hook_h
 
 #include <fra/core.h>
 

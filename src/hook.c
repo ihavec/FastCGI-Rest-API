@@ -4,6 +4,7 @@
 #include "end.h"
 #include "dbg.h"
 #include "req.h"
+#include "lock.h"
 
 #include <stdlib.h>
 #include <pthread.h>
@@ -22,26 +23,6 @@ static pthread_mutex_t req_hooks_lock = PTHREAD_MUTEX_INITIALIZER;
 #endif
 static fra_p_hook_t * * glob_hooks;
 static fra_p_hook_t * * req_hooks;
-
-#ifdef NO_PTHREADS
-#define fra_p_lock( L, E )
-#else
-#define fra_p_lock( L, E ) \
-	if( L ) { \
-		rc = pthread_mutex_lock( L ); \
-		check( rc == 0, E ); \
-	}
-#endif
-
-#ifdef NO_PTHREADS
-#define fra_p_unlock( L, E )
-#else
-#define fra_p_unlock( L, E ) \
-	if( ( L ) ) { \
-		rc = pthread_mutex_unlock( ( L ) ); \
-		check( rc == 0, E ); \
-	}
-#endif
 
 static int hook_reg(
 #ifndef NO_PTHREADS

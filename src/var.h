@@ -1,6 +1,7 @@
-#ifndef fra_p_core_var_h
-#define fra_p_core_var_h
+#ifndef fra_p_var_h
+#define fra_p_var_h
 
+#include "ht.h"
 
 #include <stddef.h>
 #include <bstrlib.h>
@@ -9,13 +10,9 @@
 #pragma GCC visibility push(hidden)
 
 
-typedef struct {
-	bstring name;
-	bstring type;
-	size_t position;
-} fra_p_var_t;
-
 int fra_p_var_init( int var_count );
+
+fra_p_ht_t *  fra_p_var_ht_get( int var_count );
 
 
 #pragma GCC visibility pop

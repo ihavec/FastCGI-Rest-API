@@ -153,8 +153,10 @@ fra_end_t * fra_end_new();
 
 /**
  * Free all memory allocated for an endpoint. endpoint arg can be NULL.
+ * The object is still freed even when return code is -1 !!!
+ * \Returns 0 on success and -1 if destroying the mutex lock fails.
  */
-void fra_end_free( fra_end_t * endpoint );
+int fra_end_free( fra_end_t * endpoint );
 
 /**
  * Add absolute url that should match this endpoint.
