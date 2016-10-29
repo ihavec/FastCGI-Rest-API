@@ -1,5 +1,5 @@
 #include <fra/core.h>
-#include "../src/core/dbg.h"
+#include "../src/dbg.h"
 
 
 
