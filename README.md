@@ -3,7 +3,9 @@
 ## CURRENTLY STILL NOTHING USEFUL. IN DEVELOPMENT ...
 
 ## Goals
-This library can be used to write fastcgi rest apis with mariadb (mysql) and libcurl support.
+This library can be used to write fastcgi rest apis with mariadb (mysql) and libcurl support.  
+Should enable the user to use whatever language she/he prefers by providing swig bindings  
+and .so files that just forward the functions to that file (for example a python or php  script).
 
 ## Implementation
 The library provides 2 main opaque types, `fra_req_t *` and `fra_end_t *`. The first one represents the current request  
@@ -14,9 +16,16 @@ You can attach your own variables to an endpoint or globally to all endpoints.
 Malloc is then called only once for all the variables, when a new request comes in and there are no left overs from previous requests.  
 This is all that the core.h provides.  
 Then there are a few plugins, that use the memory management and hooks that the core.h provides to extend the user experience.  
-mysql.h provides functions to make asynchronous mysql calls.  
-curl.h provides functions to make asynchronous curl calls.  
-auth\_basic.h provides functions for basic user authentication.  
+`plugin.h` provides funtcions to install/enable/disable plugins
+`mysql.h` provides functions to make asynchronous mysql calls.  
+`curl.h` provides functions to make asynchronous curl calls.  
+`auth_basic.h` provides functions for basic user authentication.  
+`json.h` provides functions to accept and send json
+`xml.h` provides functions to accept and send xml
+`json_xml.h` is a wrapper for `json.h` and `xml.h` so both can be accepted simultaneously
+`swagger.h` provides full swagger support. A swagger json file is parseed and watched for changes!!! Each time it changes new endpoints  
+are created/removed. Then when an endpoint gets called the shared library loads the `endpoint_id.so` from the folder specified in  
+swagger.conf and calls the function `int fra_swagger_endpoint_id_handle( fra_req_t * req )` from the .so.
 ...  
 (TODO other authentication plugins)  
 
