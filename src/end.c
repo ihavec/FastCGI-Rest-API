@@ -6,57 +6,11 @@
 #include "dbg.h"
 #include "hook.h"
 #include "lock.h"
-#include "url_ht.h"
 
 #include <stdlib.h>
 #ifndef NO_PTHREADS
 #include <pthread.h>
 #endif
-
-
-
-
-// private functions and stuff :)
-
-#ifndef NO_PTHREADS
-static pthread_mutex_t urls_lock;
-#endif
-//static fra_p_url_ht_t * urls;
-
-
-
-
-// semi-private functions
-
-int fra_p_end_init() {
-
-	int rc;
-
-
-#ifndef NO_PTHREADS
-	if( fra_p_pthreads ) {
-		rc = pthread_mutex_init( &urls_lock, NULL );
-		check( rc, final_cleanup );
-	}
-#endif
-
-	//urls = fra_p_url_ht_new( 500 );
-	//check( urls, urls_lock_cleanup );
-
-	return 0;
-
-urls_lock_cleanup:
-#ifndef NO_PTHREADS
-	if( fra_p_pthreads ) {
-		rc = pthread_mutex_init( &urls_lock, NULL );
-		check( rc, final_cleanup );
-	}
-
-final_cleanup:
-#endif
-	return -1;
-
-}
 
 
 
@@ -139,18 +93,4 @@ e_cleanup:
 final_cleanup:
 	return -1;
 
-}
-
-int fra_end_url_add( fra_end_t * e, char * url ) {
-
-	int rc;
-
-
-	fra_p_lock( &e->lock, final_cleanup );
-
-
-	return 0;
-
-final_cleanup:
-	return -1;
 }

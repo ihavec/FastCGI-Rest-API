@@ -5,6 +5,7 @@
 #include "req.h"
 #include "hook.h"
 #include "var.h"
+#include "url.h"
 
 
 
@@ -26,6 +27,9 @@ int fra_glob_init() {
 	check( rc == 0, final_cleanup );
 
 	rc = fra_p_var_init( 400 );
+	check( rc == 0, final_cleanup );
+
+	rc = fra_p_url_init();
 	check( rc == 0, final_cleanup );
 
 	return 0;

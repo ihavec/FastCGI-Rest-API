@@ -15,6 +15,7 @@
 
 #pragma GCC visibility push(hidden)
 
+
 struct fra_end {
 	bstring name;
 	size_t store_size;
@@ -25,7 +26,6 @@ struct fra_end {
 #endif
 };
 
-int fra_p_end_init();
 
 #pragma GCC visibility pop
 

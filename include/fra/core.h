@@ -162,22 +162,12 @@ int fra_end_free( fra_end_t * endpoint );
  * Add absolute url that should match this endpoint.
  * Multiple urls can match the same endpoint.
  */
-int fra_end_url_add( fra_end_t * e, char * url );
+int fra_end_url_add( fra_end_t * e, char * verb, char * url );
 
 /**
  * Remove absolute url that should match this endpoint.
  */
-int fra_end_url_del( fra_end_t * e, char * url );
-
-/**
- * Add HTTP verb that should match this endpoint.
- */
-int fra_end_verb_add( fra_end_t * e, char * verb );
-
-/**
- * Remove HTTP verb that should match this endpoint.
- */
-int fra_end_verb_del( fra_end_t * e, char * verb );
+int fra_end_url_del( fra_end_t * e, char * verb, char * url );
 
 //TODO
 //add support for fra_end_urlformat_add( char * format, ... ) / del( char * format )
