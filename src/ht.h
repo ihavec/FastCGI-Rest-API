@@ -24,7 +24,7 @@ void * fra_p_ht_get( fra_p_ht_t * ht, const char * key, int key_len );
 
 void * fra_p_ht_get_by_hash( fra_p_ht_t * ht, const char * key, int key_len, uint32_t hash );
 
-void fra_p_ht_free();
+void fra_p_ht_free( fra_p_ht_t * ht );
 
 
 #pragma GCC visibility pop
