@@ -149,7 +149,7 @@ int fra_glob_poll();
 /**
  * Create an new empty endpoint that can be used to register variables, add matching urls ...
  */
-fra_end_t * fra_end_new();
+fra_end_t * fra_end_new( int var_count );
 
 /**
  * Free all memory allocated for an endpoint. endpoint arg can be NULL.
@@ -168,6 +168,11 @@ int fra_end_url_add( fra_end_t * e, char * verb, char * url );
  * Remove absolute url that should match this endpoint.
  */
 int fra_end_url_del( fra_end_t * e, char * verb, char * url );
+
+/**
+ * Sets the callback to handle the requests sent to this endpoint
+ */
+int fra_end_callback_set( fra_end_t * e, int (*callback)( fra_req_t * ) );
 
 //TODO
 //add support for fra_end_urlformat_add( char * format, ... ) / del( char * format )

@@ -47,9 +47,26 @@ static int hello_world5() {
 
 }
 
+static int handle( fra_req_t * req ) {
+
+	FCGX_FPrintF(
+			fra_req_fcgx( req )->out,
+			"Status: 200 OK\r\n"
+			"Content-type: application/json; charset=utf-8\r\n"
+			"\r\n"
+			"{ \"msg\": \"Hello world :)\" }"
+			"\r\n"
+		    );
+
+	return 0;
+
+}
+
 int main( int argc, char * * argv ) {
 
 	int rc;
+
+	fra_end_t * e;
 
 
 	freopen( argv[1], "w", stdout );
@@ -74,6 +91,15 @@ int main( int argc, char * * argv ) {
 	check( rc == 0, final_cleanup );
 
 	rc = fra_req_reg( "buhu", int );
+	check( rc == 0, final_cleanup );
+
+	e = fra_end_new( 20 );
+	check( e, final_cleanup );
+
+	rc = fra_end_callback_set( e, handle );
+	check( rc == 0, final_cleanup );
+
+	rc = fra_end_url_add( e, "GET", "say/hello" );
 	check( rc == 0, final_cleanup );
 
 	fra_glob_poll();

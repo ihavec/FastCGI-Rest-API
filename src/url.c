@@ -46,9 +46,9 @@ static int set_url( void * value_v, void * arg_v ) {
 
 }
 
-static void destroy_url( void * value ) {
+static void destroy_url( void * value_v ) {
 
-        bdestroy( (bstring)value );
+        bdestroy( ( (struct url *)value_v )->verb );
 
 }
 
@@ -90,6 +90,51 @@ final_cleanup:
 fra_p_ht_t * fra_p_url_ht_get() {
 
 	return fra_p_ht_new( 500, sizeof( struct url ), set_url, destroy_url );
+
+}
+
+fra_end_t * fra_p_url_to_endpoint( bstring verb, bstring url ) {
+
+	int rc;
+
+	int eq;
+	struct url * value;
+	fra_end_t * e;
+
+
+	e = NULL;
+
+	fra_p_lock( &urls_lock, final_cleanup );
+
+	value = (struct url *)fra_p_ht_get( urls, bdata( url ), blength( url ) );
+
+	while( value ) {
+
+		eq = biseq( value->verb, verb );
+		check( eq != -1, unlock_cleanup );
+
+		if( eq ) {
+
+			e = value->e;
+			break;
+
+		}
+
+		value = value->next;
+
+	}
+
+	fra_p_unlock( &urls_lock, final_cleanup );
+
+	return e;
+
+unlock_cleanup:
+	fra_p_unlock( &urls_lock, final_cleanup );
+
+#ifndef NO_PTHREADS
+final_cleanup:
+#endif
+	return NULL;
 
 }
 
@@ -135,7 +180,7 @@ int fra_end_url_add( fra_end_t * e, char * verb, char * url ) {
 		check( value->next, verb_cleanup );
 
 		value->next->next = NULL;
-		value->next->verb = verb;
+		value->next->verb = new.verb;
 		value->next->e = e;
 
 	} else {

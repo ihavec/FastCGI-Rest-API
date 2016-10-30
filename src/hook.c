@@ -50,7 +50,7 @@ static int hook_reg(
 	new_hook->callback = callback;
 	new_hook->priority = priority;
 
-	fra_p_lock( lock, new_hook_cleanup );
+	if( lock ) fra_p_lock( lock, new_hook_cleanup );
 
 	if( ! hooks[ type ] ) {
 
@@ -82,7 +82,7 @@ static int hook_reg(
 
 	}
 
-	fra_p_unlock( lock, final_cleanup );
+	if( lock ) fra_p_unlock( lock, final_cleanup );
 
 	return 0;
 
@@ -113,14 +113,14 @@ static int hook_execute(
 
 	check( type < type_max && hooks, final_cleanup );
 
-	fra_p_lock( lock, final_cleanup );
+	if( lock ) fra_p_lock( lock, final_cleanup );
 
 	for( cur = hooks[ type ]; cur; cur = cur->next ) {
 
 		call = cur->callback;
 		check( call, unlock_cleanup );
 
-		fra_p_unlock( lock, final_cleanup );
+		if( lock ) fra_p_unlock( lock, final_cleanup );
 
 		if( put_req ) {
 
@@ -134,16 +134,16 @@ static int hook_execute(
 
 		}
 
-		fra_p_lock( lock, final_cleanup );
+		if( lock ) fra_p_lock( lock, final_cleanup );
 
 	}
 
-	fra_p_unlock( lock, final_cleanup );
+	if( lock ) fra_p_unlock( lock, final_cleanup );
 
 	return 0;
 
 unlock_cleanup:
-	fra_p_unlock( lock, final_cleanup );
+	if( lock ) fra_p_unlock( lock, final_cleanup );
 
 final_cleanup:
 	return -1;

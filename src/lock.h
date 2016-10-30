@@ -12,7 +12,7 @@
 int fra_p_pthreads;
 
 #define fra_p_lock( L, E ) \
-	if( fra_p_pthreads && L ) { \
+	if( fra_p_pthreads ) { \
 		rc = pthread_mutex_lock( L ); \
 		check( rc == 0, E ); \
 	}
@@ -22,7 +22,7 @@ int fra_p_pthreads;
 #define fra_p_unlock( L, E )
 #else
 #define fra_p_unlock( L, E ) \
-	if( fra_p_pthreads && L ) { \
+	if( fra_p_pthreads ) { \
 		rc = pthread_mutex_unlock( ( L ) ); \
 		check( rc == 0, E ); \
 	}

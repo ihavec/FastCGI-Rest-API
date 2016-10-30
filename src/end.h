@@ -24,6 +24,7 @@ struct fra_end {
 #ifndef NO_PTHREADS
 	pthread_mutex_t lock;
 #endif
+	int (*callback)( fra_req_t * );
 };
 
 

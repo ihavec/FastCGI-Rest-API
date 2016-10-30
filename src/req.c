@@ -6,6 +6,7 @@
 #include "dbg.h"
 #include "config.h"
 #include "hook.h"
+#include "url.h"
 
 #include <stdlib.h>
 #include <poll.h>
@@ -127,6 +128,32 @@ void reset_req( fra_req_t * req ) {
 
 }
 
+static int set_param( fra_req_t * r, const char * key, int mlen, bstring target ) {
+
+	char * param;
+	int slen;
+
+
+	check( target, final_cleanup );
+
+	param = FCGX_GetParam( key, r->fcgx.envp );
+	check( param, final_cleanup );
+
+	slen = strnlen( param, mlen );
+	check( slen < mlen && slen >= 0, final_cleanup );
+
+	target->mlen = -1;
+	target->slen = slen;
+	target->data = (unsigned char *)param;
+
+	return 0;
+
+final_cleanup:
+	return -1;
+
+}
+
+
 
 
 
@@ -174,26 +201,34 @@ int fra_p_req_handle_new( short revents ) {
 	FCGX_InitRequest( &req->fcgx, 0, 0 );
 
 	rc = FCGX_Accept_r( &req->fcgx );
-	check( rc >= 0, req_cleanup );
+	check( rc >= 0, fcgx_cleanup );
 
 	req->fcgx_defined = 1;
 
+	rc = set_param( req, "REQUEST_METHOD", FRA_CORE_MAX_VERB_LENGTH, &req->verb );
+	check( rc == 0, fcgx_cleanup );
+
+	rc = set_param( req, "REQUEST_URI", FRA_CORE_MAX_URL_LENGTH, &req->url );
+	check( rc == 0, fcgx_cleanup );
+
 	rc = fra_p_req_hook_execute( req, FRA_REQ_BEFORE_ENDPOINT );
-	check( rc == 0, req_cleanup );
+	check( rc == 0, fcgx_cleanup );
 
 	if( ! req->endpoint ) {
 
-		/* ... parse url to get endpoint ... */
-
-		req->endpoint = NULL; // set to the real endpoint ...
+		req->endpoint = fra_p_url_to_endpoint( &req->verb, &req->url );
+		check( req->endpoint, fcgx_cleanup );
 
 	}
 
 	//req->endpoint_store = fra_p_endpoint_store_get( req->endpoint );
 
 	rc = fra_p_req_hook_execute( req, FRA_REQ_NEW );
-	check( rc == 0, req_cleanup );
+	check( rc == 0, fcgx_cleanup );
 
+	if( req->endpoint->callback ) req->endpoint->callback( req );
+
+	/*
 	FCGX_FPrintF(
 			req->fcgx.out,
 			"Status: 200 OK\r\n"
@@ -202,6 +237,7 @@ int fra_p_req_handle_new( short revents ) {
 			"{s:0}"
 			"\r\n"
 		    );
+		    */
 
 	FCGX_Finish_r( &req->fcgx );
 
@@ -209,6 +245,17 @@ int fra_p_req_handle_new( short revents ) {
 	check( rc == 0, final_cleanup );
 
 	return 0;
+
+fcgx_cleanup:
+	FCGX_FPrintF(
+			req->fcgx.out,
+			"Status: 500 Internal Server Error\r\n"
+			"Content-type: application/json; charset=utf-8\r\n"
+			"\r\n"
+			"{ \"s\":-1, \"error\": \"Go away\" }"
+			"\r\n"
+		    );
+	FCGX_Finish_r( &req->fcgx );
 
 req_cleanup:
 	rc = req_maybe_free( req );

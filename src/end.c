@@ -40,6 +40,8 @@ fra_end_t * fra_end_new( int var_count ) {
 	e->hooks = calloc( FRA_GLOB_HOOK_COUNT, sizeof( fra_p_hook_t * ) );
 	check( e->hooks, store_map_cleanup );
 
+	e->callback = NULL;
+
 	return e;
 
 store_map_cleanup:
@@ -89,6 +91,26 @@ int fra_end_free( fra_end_t * e ) {
 e_cleanup:
 	free( e );
 #endif
+
+final_cleanup:
+	return -1;
+
+}
+
+int fra_end_callback_set( fra_end_t * e, int (*callback)( fra_req_t * ) ) {
+
+#ifndef NO_PTHREADS
+	int rc;
+#endif
+
+
+	fra_p_lock( &e->lock, final_cleanup );
+
+	e->callback = callback;
+
+	fra_p_unlock( &e->lock, final_cleanup );
+
+	return 0;
 
 final_cleanup:
 	return -1;

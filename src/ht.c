@@ -45,6 +45,7 @@ fra_p_ht_t * fra_p_ht_new( int bucket_count, size_t value_size, fra_p_ht_set_val
 
 	ht->destructor = destructor;
 
+	debug_v( "buckets count is %d", ht->buck_c );
 	ht->buck = calloc( ht->buck_c, sizeof( struct bucket ) );
 	check( ht->buck, ht_cleanup );
 

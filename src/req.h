@@ -4,6 +4,7 @@
 #include <fra/core.h>
 
 #include <fcgiapp.h>
+#include <bstrlib.h>
 
 
 
@@ -18,6 +19,8 @@ struct fra_req {
 	void * req_store;
 	fra_end_t * endpoint;
 	void * endpoint_store;
+	struct tagbstring url;
+	struct tagbstring verb;
 };
 
 int fra_p_req_init();
