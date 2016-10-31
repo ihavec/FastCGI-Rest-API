@@ -20,7 +20,7 @@
 #ifndef NO_PTHREADS
 static pthread_mutex_t urls_lock;
 #endif
-static fra_p_ht_t * urls;
+static fra_p_ht_t * urls = NULL;
 
 struct url {
 	struct url * next;
@@ -48,7 +48,30 @@ static int set_url( void * value_v, void * arg_v ) {
 
 static void destroy_url( void * value_v ) {
 
-        bdestroy( ( (struct url *)value_v )->verb );
+	struct url * value;
+	struct url * prev_value;
+
+
+	if( value_v ) {
+
+		value = (struct url *)value_v;
+
+		bdestroy( value->verb );
+		value = value->next;
+
+		while( value ) {
+
+			bdestroy( value->verb );
+
+			prev_value = value;
+
+			value = value->next;
+
+			free( prev_value );
+
+		}
+
+	}
 
 }
 
@@ -69,7 +92,7 @@ int fra_p_url_init() {
         }
 #endif
 
-        urls = fra_p_ht_new( 500, sizeof( bstring ), set_url, destroy_url );
+        urls = fra_p_ht_new( 500, sizeof( struct url ), set_url, destroy_url );
         check( urls, urls_lock_cleanup );
 
         return 0;
@@ -84,6 +107,32 @@ urls_lock_cleanup:
 final_cleanup:
 #endif
 	return -1;
+
+}
+
+void fra_p_url_deinit() {
+
+        int rc;
+
+
+	fra_p_lock( &urls_lock, final_cleanup );
+
+        fra_p_ht_free( urls );
+	urls = NULL;
+
+	fra_p_unlock( &urls_lock, final_cleanup );
+
+#ifndef NO_PTHREADS
+        if( fra_p_pthreads ) {
+                rc = pthread_mutex_destroy( &urls_lock );
+                check( rc, final_cleanup );
+        }
+#endif
+
+        return;
+
+final_cleanup:
+	return;
 
 }
 
