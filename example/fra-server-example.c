@@ -62,11 +62,27 @@ static int handle( fra_req_t * req ) {
 
 }
 
+static int say_bye( fra_req_t * req ) {
+
+	FCGX_FPrintF(
+			fra_req_fcgx( req )->out,
+			"Status: 200 OK\r\n"
+			"Content-type: application/json; charset=utf-8\r\n"
+			"\r\n"
+			"{ \"msg\": \"Bye bye :(\" }"
+			"\r\n"
+		    );
+
+	return 0;
+
+}
+
 int main( int argc, char * * argv ) {
 
 	int rc;
 
 	fra_end_t * e;
+	fra_end_t * e2;
 
 
 	freopen( argv[1], "w", stdout );
@@ -99,7 +115,16 @@ int main( int argc, char * * argv ) {
 	rc = fra_end_callback_set( e, handle );
 	check( rc == 0, final_cleanup );
 
-	rc = fra_end_url_add( e, "GET", "say/hello" );
+	rc = fra_end_url_add( e, "GET", "/say/hello" );
+	check( rc == 0, final_cleanup );
+
+	e2 = fra_end_new( 20 );
+	check( e2, final_cleanup );
+
+	rc = fra_end_callback_set( e2, say_bye );
+	check( rc == 0, final_cleanup );
+
+	rc = fra_end_url_add( e2, "GET", "/say/bye" );
 	check( rc == 0, final_cleanup );
 
 	fra_glob_poll();
