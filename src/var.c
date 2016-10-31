@@ -96,6 +96,12 @@ final_cleanup:
 
 }
 
+void fra_p_var_deinit() {
+
+	fra_p_ht_free( glob_store_map );
+
+}
+
 fra_p_ht_t *  fra_p_var_ht_get( int var_count ) {
 
 	return fra_p_ht_new( var_count, sizeof( struct var ), fra_p_var_set, fra_p_var_free );

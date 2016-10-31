@@ -14,6 +14,8 @@ int fra_p_var_init( int var_count );
 
 fra_p_ht_t *  fra_p_var_ht_get( int var_count );
 
+void fra_p_var_deinit();
+
 
 #pragma GCC visibility pop
 
