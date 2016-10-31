@@ -5,6 +5,7 @@
 #include "end.h"
 #include "dbg.h"
 #include "murmur3.h"
+#include "lock.h"
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -93,6 +94,29 @@ int fra_p_var_init( int var_count ) {
 
 final_cleanup:
 	return -1;
+
+}
+
+size_t fra_p_var_store_size_get( int * rc_r ) {
+
+	int rc;
+
+	size_t r;
+
+
+	fra_p_lock( &glob_store_map_lock, final_cleanup );
+
+	r = glob_store_size;
+
+	fra_p_unlock( &glob_store_map_lock, final_cleanup );
+
+	*rc_r = 0;
+
+	return r;
+
+final_cleanup:
+	*rc_r = -1;
+	return 0;
 
 }
 

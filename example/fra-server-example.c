@@ -77,7 +77,7 @@ static int say_bye( fra_req_t * req ) {
 
 }
 
-int main( int argc, char * * argv ) {
+int main() {
 
 	int rc;
 
@@ -85,8 +85,8 @@ int main( int argc, char * * argv ) {
 	fra_end_t * e2;
 
 
-	freopen( argv[1], "w", stdout );
-	freopen( argv[2], "w", stderr );
+	freopen( "build/fra-server-example.err", "w", stdout );
+	freopen( "buid/fra-server-example.log", "w", stderr );
 
 	rc = fra_glob_init();
 	check( rc == 0, final_cleanup );

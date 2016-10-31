@@ -7,6 +7,7 @@
 #include "config.h"
 #include "hook.h"
 #include "url.h"
+#include "lock.h"
 
 #include <stdlib.h>
 #include <poll.h>
@@ -26,22 +27,23 @@ static pthread_mutex_t empty_req_lock = PTHREAD_MUTEX_INITIALIZER;
 static fra_req_t * empty_req;
 static int empty_count;
 static int all_count;
-static int req_store_size;
 
 static fra_req_t * get_req() {
 
-	fra_req_t * cur;
-#ifndef NO_PTHREADS
 	int rc;
 
+	fra_req_t * cur;
+	size_t store_size;
 
-	rc = pthread_mutex_lock( &empty_req_lock );
-	check( rc == 0, final_cleanup );
-#endif
+
+	fra_p_lock( &empty_req_lock, final_cleanup );
 
 	if( ! empty_req ) {
 
-		cur = malloc( sizeof( fra_req_t ) + req_store_size );
+		store_size = fra_p_var_store_size_get( &rc );
+		check( rc == 0, final_cleanup );
+
+		cur = malloc( sizeof( fra_req_t ) + store_size );
 		check( cur, unlock_cleanup );
 
 		cur->req_store = (void *)( (char *)cur + sizeof( fra_req_t ) );
@@ -58,10 +60,7 @@ static fra_req_t * get_req() {
 
 	}
 
-#ifndef NO_PTHREADS
-	rc = pthread_mutex_unlock( &empty_req_lock );
-	check( rc == 0, cur_cleanup );
-#endif
+	fra_p_unlock( &empty_req_lock, cur_cleanup );
 
 	return cur;
 
@@ -168,7 +167,6 @@ int fra_p_req_init() {
 	check( rc == 0, final_cleanup );
 
 	empty_req = NULL;
-	req_store_size = 0;
 
 	return 0;
 
