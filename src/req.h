@@ -20,10 +20,14 @@ struct fra_req {
 	fra_end_t * endpoint;
 	void * endpoint_store;
 	struct tagbstring url;
+	struct tagbstring base_url;
+	struct tagbstring query_url;
 	struct tagbstring verb;
 };
 
 int fra_p_req_init();
+
+void fra_p_req_deinit();
 
 int fra_p_req_handle_new( short revents );
 

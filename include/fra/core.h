@@ -25,6 +25,13 @@ typedef struct fra_end fra_end_t;
 int fra_glob_init();
 
 /**
+ * Global deinit function. It is not thread safe! Can be called at the end to cleanup.
+ * Must be called exactly once.
+ * You can call fra_glob_init() again afterwards if you need to use the library functions again.
+ */
+void fra_glob_deinit();
+
+/**
  * Main macro for getting variables from inside a request.
  * Name should be a static string, because we operate on it using sizeof() for better performance.
  */
@@ -142,9 +149,16 @@ int fra_glob_fd_add(
 		int (*callback)( short revents ) );
 
 /**
- * This function never returns. It polls the file descriptors forever. If there is an error it does return with a non-zero value.
+ * This function returns only if you call fra_glob_poll_stop().
+ * Else it polls the file descriptors forever.
+ * If there is an error it also returns with a non-zero value.
  */
 int fra_glob_poll();
+
+/**
+ * Stops the fra_glob_poll() functions. This can be used to stop the server.
+ */
+int fra_glob_poll_stop();
 
 /**
  * Create an new empty endpoint that can be used to register variables, add matching urls ...

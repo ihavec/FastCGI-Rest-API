@@ -17,6 +17,8 @@ struct fra_p_hook {
 
 int fra_p_hook_init();
 
+void fra_p_hook_deinit();
+
 int fra_p_glob_hook_execute( enum fra_glob_hook_type type );
 
 int fra_p_req_hook_execute( fra_req_t * req, enum fra_hook_type type );

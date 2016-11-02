@@ -4,6 +4,7 @@
 #include "dbg.h"
 #include "req.h"
 #include "config.h"
+#include "lock.h"
 
 #include <poll.h>
 #ifndef NO_PTHREADS
@@ -37,6 +38,7 @@ static struct callback * callbacks;
 #ifndef NO_PTHREADS
 static pthread_mutex_t main_poll_lock = PTHREAD_MUTEX_INITIALIZER;
 #endif
+static int should_stop;
 
 
 
@@ -178,6 +180,16 @@ final_cleanup:
 
 }
 
+void fra_p_poll_deinit() {
+
+	free( main_poll );
+	free( callbacks );
+
+}
+
+
+
+
 // public functions
 
 int fra_req_fd_add( fra_req_t * req, int fd, short events, int (*cb)( fra_req_t *, short ) ) {
@@ -205,6 +217,8 @@ int fra_glob_poll() {
 #endif
 
 	check( initialized, unlock_cleanup );
+
+	should_stop = 0;
 
 	debug( "before poll" );
 	while( 1 ) {
@@ -234,6 +248,8 @@ int fra_glob_poll() {
 
 		}
 
+		if( should_stop ) break;
+
 #ifndef NO_PTHREADS
 		rc = pthread_mutex_unlock( &main_poll_lock );
 		check( rc == 0, final_cleanup );
@@ -256,6 +272,24 @@ unlock_cleanup:
 
 final_cleanup:
 #endif
+	return -1;
+
+}
+
+int fra_glob_poll_stop() {
+
+	int rc;
+
+
+	fra_p_lock( &main_poll_lock, final_cleanup );
+
+	should_stop = 1;
+
+	fra_p_unlock( &main_poll_lock, final_cleanup );
+
+	return 0;
+
+final_cleanup:
 	return -1;
 
 }

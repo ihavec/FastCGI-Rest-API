@@ -38,3 +38,13 @@ final_cleanup:
 	return -1;
 
 }
+
+void fra_glob_deinit() {
+
+	fra_p_url_deinit();
+	fra_p_var_deinit();
+	fra_p_hook_deinit();
+	fra_p_req_deinit();
+	fra_p_poll_deinit();
+
+}

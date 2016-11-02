@@ -35,18 +35,22 @@ cat > test.conf <<EOF
 	url.rewrite-if-not-file = ( "(.*)" => "/" )
 	server.modules += ( "mod_fastcgi" )
 	fastcgi.server = ( "/" => ((
-	"socket" => "$(pwd)/test.sock",
-	"bin-path" => "$(pwd)/test"
+	"socket" => "$(pwd)/test.sock"
 	))
 	)
 EOF
-	valgrind --log-file=test.valgrind.log --trace-children=yes --leak-check=full --show-leak-kinds=all --error-exitcode=2 -- lighttpd -D -f test.conf > /dev/null 2>&1 &
-	pid=$!
+	valgrind --suppressions=fake_fcgx_deinit.valgrind.suppression --log-file=test.valgrind.log --trace-children=yes --leak-check=full --show-leak-kinds=all --error-exitcode=2 -- spawn-fcgi -s test.sock ./test > /dev/null 2>&1 &
 	disown
 	#allow valgrind time to setup the server...
-	sleep 1
+	sleep 0.3
+	lighttpd -D -f test.conf > /dev/null 2>&1 &
+	pid=$!
+	disown
 	url=$(<$t.url)
 	curl -s localhost:8080${url} > test.result
+	curl -s localhost:8080/die > /dev/null
+	#allow the server time to die
+	sleep 0.3
 	kill $pid
 	if diff test.result $t.expected
 	then
@@ -56,7 +60,10 @@ EOF
 		exit -1
 	fi
 	echo "-----> Running valgrind for test \"$t\" ..."
-	if grep -q "in use at exit: 0 bytes in 0 blocks" test.valgrind.log
+	if grep -q " definitely lost: 0 bytes in 0 blocks" test.valgrind.log \
+		&& grep -q "indirectly lost: 0 bytes in 0 blocks" test.valgrind.log \
+		&& grep -q "possibly lost: 0 bytes in 0 blocks" test.valgrind.log \
+		&& grep -q "still reachable: 0 bytes in 0 blocks" test.valgrind.log
 	then
 		echo "**** Valgrind test succeded"
 	else

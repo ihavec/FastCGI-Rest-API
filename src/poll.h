@@ -8,6 +8,8 @@
 
 int fra_p_poll_init();
 
+void fra_p_poll_deinit();
+
 #pragma GCC visibility pop
 
 

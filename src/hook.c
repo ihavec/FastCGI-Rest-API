@@ -150,6 +150,29 @@ final_cleanup:
 
 }
 
+static void hooks_free( fra_p_hook_t * * hooks, int type_count ) {
+
+	fra_p_hook_t * cur;
+	fra_p_hook_t * next;
+	int i;
+
+
+	for( i = 0; i < type_count; i++ ) {
+
+		cur = hooks[ i ];
+
+		while( cur ) {
+
+			next = cur->next;
+			free( cur );
+			cur = next;
+
+		}
+
+	}
+
+}
+
 
 
 
@@ -167,6 +190,15 @@ int fra_p_hook_init() {
 
 final_cleanup:
 	return -1;
+
+}
+
+void fra_p_hook_deinit() {
+
+	hooks_free( glob_hooks, FRA_GLOB_HOOK_COUNT );
+	hooks_free( req_hooks, FRA_HOOK_COUNT );
+	free( glob_hooks );
+	free( req_hooks );
 
 }
 

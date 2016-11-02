@@ -28,11 +28,36 @@ static int handle( fra_req_t * req ) {
 
 }
 
+static int finish_app( fra_req_t * req ) {
+
+	int rc;
+
+
+	FCGX_FPrintF(
+			fra_req_fcgx( req )->out,
+			"Status: 200 OK\n"
+			"Content-type: application/json; charset=utf-8\n"
+			"\n"
+			"Will now stop the server"
+			"\n"
+		    );
+
+	rc = fra_glob_poll_stop();
+	check( rc == 0, final_cleanup );
+
+	return 0;
+
+final_cleanup:
+	return -1;
+
+}
+
 int main() {
 
 	int rc;
 
 	fra_end_t * e;
+	fra_end_t * e2;
 
 
 	freopen( "test.log", "w", stdout );
@@ -56,7 +81,25 @@ int main() {
 	rc = fra_end_url_add( e, "GET", "/print/buhu" );
 	check( rc == 0, final_cleanup );
 
-	fra_glob_poll();
+	e2 = fra_end_new( 20 );
+	check( e, final_cleanup );
+
+	rc = fra_end_callback_set( e2, finish_app );
+	check( rc == 0, final_cleanup );
+
+	rc = fra_end_url_add( e2, "GET", "/die" );
+	check( rc == 0, final_cleanup );
+
+	rc = fra_glob_poll();
+	check( rc == 0, final_cleanup );
+
+	fra_end_free( e );
+
+	fra_end_free( e2 );
+
+	fra_glob_deinit();
+
+	debug( "All cleaned up :)" );
 
 	return 0;
 

@@ -1,0 +1,11 @@
+{
+	<missing_FCGX_Deinit_suppression>
+		Memcheck:Leak
+		match-leak-kinds: reachable
+		fun:calloc
+		fun:OS_LibInit
+		fun:FCGX_Init
+		fun:fra_p_req_init
+		fun:fra_glob_init
+		fun:main
+}

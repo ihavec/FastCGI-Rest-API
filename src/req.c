@@ -152,6 +152,63 @@ final_cleanup:
 
 }
 
+static int set_url( fra_req_t * r ) {
+
+	char * param;
+	int i;
+
+
+	param = FCGX_GetParam( "REQUEST_URI", r->fcgx.envp );
+	check( param, final_cleanup );
+
+	r->base_url.data = (unsigned char *)param;
+	r->base_url.slen = -1;
+	r->base_url.mlen = -1;
+
+	r->url.data = (unsigned char *)param;
+	r->url.slen = -1;
+	r->url.mlen = -1;
+
+	r->query_url.data = (unsigned char *)"";
+	r->query_url.slen = -1;
+	r->query_url.mlen = -1;
+
+	for( i = 0; param[i] != '\0'; i++ ) {
+
+		check( i < FRA_CORE_MAX_URL_LENGTH, final_cleanup );
+
+		if( param[i] == '?' && r->base_url.slen == -1 ) {
+
+			r->base_url.slen = i;
+
+			r->query_url.data = (unsigned char *)param + i;
+
+		}
+
+		// TODO parse get params to a hashtable of bstrings. Should use a safer function than murmurhash
+		// or better just abort on too many params in one bucket as someone is trying the DOS attack on
+		//  hashtables...
+		//  maybe only parse when the user first requests a parameter? Probably smarter, so they can have
+		//  their own implementations of parsing, that also escapes utf8 chars, or aborts on weird data ...
+
+	}
+
+	r->url.slen = i;
+
+	if( r->base_url.slen == -1 ) {
+
+		r->base_url.slen = i;
+
+	}
+
+	r->query_url.slen = r->url.slen - r->base_url.slen;
+
+	return 0;
+
+final_cleanup:
+	return -1;
+
+}
 
 
 
@@ -172,6 +229,25 @@ int fra_p_req_init() {
 
 final_cleanup:
 	return -1;
+
+}
+
+void fra_p_req_deinit() {
+
+	fra_req_t * cur;
+
+
+	// Memory leak here as I didn't find any FCGX_Deinit() function
+
+	while( empty_req ) {
+
+		cur = empty_req;
+
+		empty_req = empty_req->next;
+
+		free( cur );
+
+	}
 
 }
 
@@ -206,7 +282,7 @@ int fra_p_req_handle_new( short revents ) {
 	rc = set_param( req, "REQUEST_METHOD", FRA_CORE_MAX_VERB_LENGTH, &req->verb );
 	check( rc == 0, fcgx_cleanup );
 
-	rc = set_param( req, "REQUEST_URI", FRA_CORE_MAX_URL_LENGTH, &req->url );
+	rc = set_url( req );
 	check( rc == 0, fcgx_cleanup );
 
 	rc = fra_p_req_hook_execute( req, FRA_REQ_BEFORE_ENDPOINT );
@@ -214,7 +290,7 @@ int fra_p_req_handle_new( short revents ) {
 
 	if( ! req->endpoint ) {
 
-		req->endpoint = fra_p_url_to_endpoint( &req->verb, &req->url );
+		req->endpoint = fra_p_url_to_endpoint( &req->verb, &req->base_url );
 		check( req->endpoint, fcgx_cleanup );
 
 	}
