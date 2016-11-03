@@ -4,11 +4,23 @@
 
 
 
+static fra_end_t * e;
+
 static int set_vars( fra_req_t * req ) {
 
-	fra( req, "buhu", int ) = 188;
+	check( fra_req_endpoint( req ) == e, final_cleanup );
+
+	void * nek = fra_var_get( req, "buhu", sizeof( "buhu" ), "int", sizeof( "int" ) );
+	check( nek, final_cleanup );
+
+	*( (int *)nek ) = 188;
+
+	//fra( req, "buhu", int ) = 188;
 
 	return 0;
+
+final_cleanup:
+	return -1;
 
 }
 
@@ -56,11 +68,12 @@ int main() {
 
 	int rc;
 
-	fra_end_t * e;
 	fra_end_t * e2;
 	FILE * f;
 	FILE * f2;
 
+
+	// TODO see the TODO in src/req.c for why this test fails for now
 
 	f = freopen( "test.log", "w", stdout );
 	setlinebuf( f );
@@ -73,11 +86,11 @@ int main() {
 	rc = fra_req_hook_reg( FRA_REQ_NEW, set_vars, 0.099f );
 	check( rc == 0, final_cleanup );
 
-	rc = fra_req_reg( "buhu", int );
-	check( rc == 0, final_cleanup );
-
 	e = fra_end_new( 20 );
 	check( e, final_cleanup );
+
+	rc = fra_reg( e, "buhu", int );
+	check( rc == 0, final_cleanup );
 
 	rc = fra_end_callback_set( e, handle );
 	check( rc == 0, final_cleanup );

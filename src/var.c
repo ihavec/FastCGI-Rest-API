@@ -225,7 +225,6 @@ void * fra_var_get( fra_req_t * request,  const char * name, int name_len, const
 
 		store = request->endpoint_store;
 
-
 	}
 
 	position = (char *)store + var->position;

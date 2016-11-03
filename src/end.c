@@ -37,6 +37,8 @@ fra_end_t * fra_end_new( int var_count ) {
 	e->store_map = fra_p_var_ht_get( var_count );
 	check( e->store_map, lock_cleanup );
 
+	e->store_size = 0;
+
 	e->hooks = calloc( FRA_GLOB_HOOK_COUNT, sizeof( fra_p_hook_t * ) );
 	check( e->hooks, store_map_cleanup );
 

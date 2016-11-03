@@ -295,6 +295,7 @@ int fra_p_req_handle_new( short revents ) {
 
 	}
 
+	// TODO have the same system than for req_empty for end_store_empty for each endpoint
 	//req->endpoint_store = fra_p_endpoint_store_get( req->endpoint );
 
 	rc = fra_p_req_hook_execute( req, FRA_REQ_NEW );
