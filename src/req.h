@@ -18,7 +18,7 @@ struct fra_req {
 	fra_req_t * next;
 	void * req_store;
 	fra_end_t * endpoint;
-	void * endpoint_store;
+	char * endpoint_store;
 	struct tagbstring url;
 	struct tagbstring base_url;
 	struct tagbstring query_url;

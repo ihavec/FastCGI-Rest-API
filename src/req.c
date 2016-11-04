@@ -78,13 +78,13 @@ final_cleanup:
 
 static int req_maybe_free( fra_req_t * req ) {
 
-#ifndef NO_PTHREADS
 	int rc;
 
 
-	rc = pthread_mutex_lock( &empty_req_lock );
+	fra_p_lock( &empty_req_lock, final_cleanup );
+
+	rc = fra_p_end_store_maybe_free( req );
 	check( rc == 0, final_cleanup );
-#endif
 
 	if( ( all_count - empty_count ) * FRA_CORE_WAITING_REQUESTS_GROWTH_FACTOR > all_count ) {
 
@@ -102,20 +102,14 @@ static int req_maybe_free( fra_req_t * req ) {
 
 	}
 
-#ifndef NO_PTHREADS
-	rc = pthread_mutex_unlock( &empty_req_lock );
-	check( rc == 0, final_cleanup );
-#endif
+	fra_p_unlock( &empty_req_lock, final_cleanup );
 
 	return 0;
 
 unlock_cleanup:
-#ifndef NO_PTHREADS
-	rc = pthread_mutex_unlock( &empty_req_lock );
-	check( rc == 0, final_cleanup );
+	fra_p_unlock( &empty_req_lock, final_cleanup );
 
 final_cleanup:
-#endif
 	return -1;
 
 }
@@ -238,6 +232,7 @@ void fra_p_req_deinit() {
 
 
 	// Memory leak here as I didn't find any FCGX_Deinit() function
+	// Added a valgrind suppression to ignopre it in the tests ...
 
 	while( empty_req ) {
 
@@ -296,7 +291,8 @@ int fra_p_req_handle_new( short revents ) {
 	}
 
 	// TODO have the same system than for req_empty for end_store_empty for each endpoint
-	//req->endpoint_store = fra_p_endpoint_store_get( req->endpoint );
+	rc = fra_p_end_store_set( req );
+	check( rc == 0, fcgx_cleanup );
 
 	rc = fra_p_req_hook_execute( req, FRA_REQ_NEW );
 	check( rc == 0, fcgx_cleanup );

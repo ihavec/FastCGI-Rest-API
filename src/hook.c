@@ -232,7 +232,7 @@ int fra_p_req_hook_execute( fra_req_t * req, enum fra_hook_type type ) {
 
 }
 
-int fra_p_endpoint_hook_execute( fra_req_t * req, enum fra_hook_type type ) {
+int fra_p_end_hook_execute( fra_req_t * req, enum fra_hook_type type ) {
 
 	check( req && req->endpoint, final_cleanup );
 

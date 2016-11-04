@@ -23,7 +23,7 @@ do
 	fi
 done
 
-for t in glob_var req_var
+for t in glob_var end_var
 do
 	cc -I../include -I../libs/bstrlib -Wall -Wextra -pedantic -std=gnu99 -g $t.c ../build/libfra.a -lfcgi -o test
 	echo "++++++++++====================++++++++++"
@@ -39,7 +39,7 @@ cat > test.conf <<EOF
 	))
 	)
 EOF
-	valgrind --suppressions=fake_fcgx_deinit.valgrind.suppression --log-file=test.valgrind.log --trace-children=yes --leak-check=full --show-leak-kinds=all --error-exitcode=2 -- spawn-fcgi -s test.sock ./test > /dev/null 2>&1 &
+	valgrind --suppressions=fake_fcgx_deinit.valgrind.suppression --log-file=test.valgrind.log --trace-children=yes --leak-check=full --show-leak-kinds=all --error-exitcode=2 -- spawn-fcgi -P test.pid -s test.sock ./test > /dev/null 2>&1 &
 	disown
 	#allow valgrind time to setup the server...
 	sleep 0.3
@@ -60,10 +60,15 @@ EOF
 		exit -1
 	fi
 	echo "-----> Running valgrind for test \"$t\" ..."
-	if grep -q " definitely lost: 0 bytes in 0 blocks" test.valgrind.log \
+	grep -q "in use at exit: 0 bytes in 0 blocks" test.valgrind.log
+	ex1=$?
+	grep -q " definitely lost: 0 bytes in 0 blocks" test.valgrind.log \
 		&& grep -q "indirectly lost: 0 bytes in 0 blocks" test.valgrind.log \
 		&& grep -q "possibly lost: 0 bytes in 0 blocks" test.valgrind.log \
 		&& grep -q "still reachable: 0 bytes in 0 blocks" test.valgrind.log
+	ex2=$?
+
+	if [ $ex1 -eq 0 -o $ex2 -eq 0 ]
 	then
 		echo "**** Valgrind test succeded"
 	else

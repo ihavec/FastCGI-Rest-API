@@ -82,6 +82,8 @@ enum fra_hook_type {
 	FRA_REQ_CREATED, /**< Called when a new fra_req_t is allocated to handle a request.
 			   Use it to initialize variables,
 			   register file descriptors ... */
+	FRA_END_STORE_CREATED, /**< Called when a new enpoint store is allocated to handle a request.
+				 Use it to initialize endpoint variables ...*/
 	FRA_REQ_BEFORE_FCGX, /**< Called before the fastcgi library has done anything (parsed url, headers ...).
 			       Use it for whatever... :) */
 	FRA_REQ_BEFORE_ENDPOINT, /**< Called before any url parsing is done.
@@ -93,6 +95,9 @@ enum fra_hook_type {
 	FRA_REQ_FREE, /**< Called right before the fra_req_t is deallocated.
 			Use it to free memory if you dynamically allocated some
 			in FRA_REQ_CREATED. */
+	FRA_END_STORE_FREE, /**< Called right before the endpoint store is deallocated.
+			      Use it to free memory if you dynamically allocated some
+			      in FRA_END_STORE_CREATED. */
 	FRA_HOOK_COUNT
 };
 

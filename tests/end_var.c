@@ -8,14 +8,22 @@ static fra_end_t * e;
 
 static int set_vars( fra_req_t * req ) {
 
-	check( fra_req_endpoint( req ) == e, final_cleanup );
+	if( fra_req_endpoint( req ) == e ) {
 
-	void * nek = fra_var_get( req, "buhu", sizeof( "buhu" ), "int", sizeof( "int" ) );
-	check( nek, final_cleanup );
+		debug( "The correct endpoint called" );
 
-	*( (int *)nek ) = 188;
+		void * nek = fra_var_get( req, "buhu", sizeof( "buhu" ), "int", sizeof( "int" ) );
+		check( nek, final_cleanup );
 
-	//fra( req, "buhu", int ) = 188;
+		*( (int *)nek ) = 188;
+
+		//fra( req, "buhu", int ) = 188;
+
+	} else {
+
+		debug( "Something else called" );
+
+	}
 
 	return 0;
 
