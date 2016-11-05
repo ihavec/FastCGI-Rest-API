@@ -209,16 +209,16 @@ void * fra_var_get( fra_req_t * request,  const char * name, int name_len, const
 		check_msg_v( request->endpoint, final_cleanup, "No global variable \"%s\" found.", name );
 
 		var = (struct var *)fra_p_ht_get_by_hash( request->endpoint->store_map, name, name_len, hash );
-		check_msg_v( var, final_cleanup, "No variable \"%s\" found for endpoint \"%s\"", name, bdata( request->endpoint->name ) );
+		check_msg_v( var, final_cleanup, "No variable \"%s\" found for endpoint %p", name, (void *)request->endpoint );
 
 		check_msg_v(
 				type_len - 1 == var->type->slen
 				&& biseqcstr( var->type, type ) == 1,
 				final_cleanup,
-				"Wrong type specified when getting variable \"%s\" from endpoint \"%s\"\n"
+				"Wrong type specified when getting variable \"%s\" from endpoint %p\n"
 				"Correct type is \"%s\" but you wrote \"%s\"",
 				name,
-				bdata( request->endpoint->name ),
+				(void *)request->endpoint,
 				bdata( var->type ),
 				type
 			   );

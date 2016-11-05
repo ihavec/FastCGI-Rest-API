@@ -18,6 +18,7 @@ static int set_vars( fra_req_t * req ) {
 		*( (int *)nek ) = 188;
 
 		//fra( req, "buhu", int ) = 188;
+		fra( req, "behe", double ) = 13.33;
 
 	} else {
 
@@ -39,9 +40,11 @@ static int handle( fra_req_t * req ) {
 			"Status: 200 OK\n"
 			"Content-type: application/json; charset=utf-8\n"
 			"\n"
-			"%d"
+			"%d\n"
+			"%f\n"
 			"\n",
-			fra( req, "buhu", int )
+			fra( req, "buhu", int ),
+			fra( req, "behe", double )
 		    );
 
 	return 0;
@@ -98,6 +101,9 @@ int main() {
 	check( e, final_cleanup );
 
 	rc = fra_reg( e, "buhu", int );
+	check( rc == 0, final_cleanup );
+
+	rc = fra_reg( e, "behe", double );
 	check( rc == 0, final_cleanup );
 
 	rc = fra_end_callback_set( e, handle );
