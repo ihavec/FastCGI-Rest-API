@@ -23,7 +23,7 @@ do
 	fi
 done
 
-for t in glob_var end_var var_types
+for t in glob_var end_var var_types hook
 do
 	cc -I../include -I../libs/bstrlib -Wall -Wextra -pedantic -std=gnu99 -g $t.c ../build/libfra.a -lfcgi -o test
 	echo "++++++++++====================++++++++++"
@@ -48,6 +48,14 @@ EOF
 	disown
 	url=$(<$t.url)
 	curl -s localhost:8080${url} > test.result
+	for i in {0..20}
+	do
+		if [ ! -f $t.$i.url ]
+		then
+			break
+		fi
+		curl -s localhost:8080$(<$t.$i.url) > test.$i.result
+	done
 	curl -s localhost:8080/die > /dev/null
 	#allow the server time to die
 	sleep 0.3
@@ -59,6 +67,20 @@ EOF
 		echo "!!!! \"$t\" test failed :("
 		exit -1
 	fi
+	for i in {0..20}
+	do
+		if [ ! -a $t.$i.expected ]
+		then
+			break
+		fi
+		if diff test.$i.result $t.$i.expected
+		then
+			echo "**** \"$t.$i\" test succeded :)"
+		else
+			echo "!!!! \"$t.$i\" test failed :("
+			exit -1
+		fi
+	done
 	echo "-----> Running valgrind for test \"$t\" ..."
 	grep -q "in use at exit: 0 bytes in 0 blocks" test.valgrind.log
 	ex1=$?
