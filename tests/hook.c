@@ -11,8 +11,11 @@ static int handle( fra_req_t * req ) {
 			"Status: 200 OK\n"
 			"Content-type: application/json; charset=utf-8\n"
 			"\n"
-			"Behe"
-			"\n"
+			"Behe\n"
+			"%s\n"
+			"%s\n",
+			fra( req, "did run", char * ),
+			fra( req, "e", char * )
 		    );
 
 	return 0;
@@ -26,8 +29,11 @@ static int handle2( fra_req_t * req ) {
 			"Status: 200 OK\n"
 			"Content-type: application/json; charset=utf-8\n"
 			"\n"
-			"Buhu"
-			"\n"
+			"Buhu\n"
+			"%s\n"
+			"%s\n",
+			fra( req, "did run", char * ),
+			fra( req, "e", char * )
 		    );
 
 	return 0;
@@ -58,25 +64,9 @@ final_cleanup:
 
 }
 
-static int created( fra_req_t * r ) {
-
-	debug( "New request created" );
-
-	return 0;
-
-}
-
 static int new( fra_req_t * r ) {
 
-	debug( "New request has come in" );
-
-	return 0;
-
-}
-
-static int e_created( fra_req_t * r ) {
-
-	debug( "e created" );
+	fra( r, "did run", char * ) = "Yes I ran";
 
 	return 0;
 
@@ -84,23 +74,15 @@ static int e_created( fra_req_t * r ) {
 
 static int e_new( fra_req_t * r ) {
 
-	debug( "e new" );
+	fra( r, "e", char * ) = "Endpoint e";
 
 	return 0;
 
 }
 
-static int e2_created( fra_req_t * r ) {
+static int e3_new( fra_req_t * r ) {
 
-	debug( "e2 created" );
-
-	return 0;
-
-}
-
-static int e2_new( fra_req_t * r ) {
-
-	debug( "e2 new" );
+	fra( r, "e", char * ) = "Endpoint e3";
 
 	return 0;
 
@@ -125,7 +107,10 @@ int main() {
 	rc = fra_glob_init();
 	check( rc == 0, final_cleanup );
 
-	rc = fra_req_hook_reg( FRA_REQ_CREATED, created, 0.1f );
+	rc = fra_req_reg( "did run", char * );
+	check( rc == 0, final_cleanup );
+
+	rc = fra_req_reg( "e", char * );
 	check( rc == 0, final_cleanup );
 
 	rc = fra_req_hook_reg( FRA_REQ_NEW, new, 0.11f );
@@ -155,7 +140,7 @@ int main() {
 	e3 = fra_end_new( 20 );
 	check( e3, final_cleanup );
 
-	rc = fra_end_hook_reg( e3, FRA_REQ_NEW, e2_new, 0.11f );
+	rc = fra_end_hook_reg( e3, FRA_REQ_NEW, e3_new, 0.11f );
 	check( rc == 0, final_cleanup );
 
 	rc = fra_end_callback_set( e3, handle2 );

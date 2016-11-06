@@ -69,7 +69,7 @@ EOF
 	fi
 	for i in {0..20}
 	do
-		if [ ! -a $t.$i.expected ]
+		if [ ! -f $t.$i.expected ]
 		then
 			break
 		fi
