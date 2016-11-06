@@ -23,7 +23,7 @@ do
 	fi
 done
 
-for t in glob_var end_var var_types hook
+for t in glob_var end_var var_types hook req
 do
 	cc -I../include -I../libs/bstrlib -Wall -Wextra -pedantic -std=gnu99 -g $t.c ../build/libfra.a -lfcgi -o test
 	echo "++++++++++====================++++++++++"

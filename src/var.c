@@ -206,7 +206,8 @@ void * fra_var_get( fra_req_t * request,  const char * name, int name_len, const
 
 	} else {
 
-		check_msg_v( request->endpoint, final_cleanup, "No global variable \"%s\" found.", name );
+		check_msg_v( request->endpoint && request->endpoint_store && request->endpoint_store->store,
+				final_cleanup, "No global variable \"%s\" found.", name );
 
 		var = (struct var *)fra_p_ht_get_by_hash( request->endpoint->store_map, name, name_len, hash );
 		check_msg_v( var, final_cleanup, "No variable \"%s\" found for endpoint %p", name, (void *)request->endpoint );
@@ -223,7 +224,7 @@ void * fra_var_get( fra_req_t * request,  const char * name, int name_len, const
 				type
 			   );
 
-		store = request->endpoint_store;
+		store = request->endpoint_store->store;
 
 	}
 

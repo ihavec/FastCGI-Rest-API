@@ -57,6 +57,7 @@ static fra_req_t * get_req() {
 
 		cur = empty_req;
 		empty_req = cur->next;
+		empty_count--;
 
 	}
 
@@ -86,7 +87,11 @@ static int req_maybe_free( fra_req_t * req ) {
 	rc = fra_p_end_store_maybe_free( req );
 	check( rc == 0, final_cleanup );
 
-	if( ( all_count - empty_count ) * FRA_CORE_WAITING_REQUESTS_GROWTH_FACTOR > all_count ) {
+	debug_v( "all_count is %d and empty_count is %d, growth factor is %f", all_count, empty_count, FRA_CORE_WAITING_REQUESTS_GROWTH_FACTOR );
+
+	if( all_count - empty_count > all_count * FRA_CORE_WAITING_REQUESTS_GROWTH_FACTOR ) {
+
+		debug( "Freeing request." );
 
 		rc = fra_p_req_hook_execute( req, FRA_REQ_FREE );
 		check( rc == 0, unlock_cleanup );
@@ -95,6 +100,8 @@ static int req_maybe_free( fra_req_t * req ) {
 		all_count--;
 
 	} else {
+
+		debug( "Caching request for later use." );
 
 		req->next = empty_req;
 		empty_req = req;
@@ -232,7 +239,7 @@ void fra_p_req_deinit() {
 
 
 	// Memory leak here as I didn't find any FCGX_Deinit() function
-	// Added a valgrind suppression to ignopre it in the tests ...
+	// Added a valgrind suppression to ignore it in the tests ...
 
 	while( empty_req ) {
 

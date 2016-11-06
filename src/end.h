@@ -17,11 +17,16 @@
 #pragma GCC visibility push(hidden)
 
 
+struct  fra_p_end_store {
+	struct fra_p_end_store * next;
+	void * store;
+};
+
 struct fra_end {
 	bstring name;
 	size_t store_size;
 	fra_p_ht_t * store_map;
-	char * store_empty;
+	fra_p_end_store_t * store_empty;
 	int store_empty_count;
 	int store_all_count;
 	fra_p_hook_t * * hooks;

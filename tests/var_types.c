@@ -97,7 +97,11 @@ final_cleanup:
 
 static int destroy_vars( fra_req_t * r ) {
 
-	bdestroy( fra( r, "book", bstring ) );
+	if( fra_req_endpoint( r ) == e ) {
+
+		bdestroy( fra( r, "book", bstring ) );
+
+	}
 
 	return 0;
 
@@ -201,7 +205,7 @@ int main() {
 	rc = fra_reg( e, "buhu", int );
 	check( rc == 0, final_cleanup );
 
-	rc = fra_req_reg( "book", bstring );
+	rc = fra_reg( e, "book", bstring );
 	check( rc == 0, final_cleanup );
 
 	rc = fra_req_reg( "currency", char * );

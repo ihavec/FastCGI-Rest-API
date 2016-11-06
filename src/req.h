@@ -12,13 +12,15 @@
 #pragma GCC visibility push(hidden)
 
 
+typedef struct fra_p_end_store fra_p_end_store_t;
+
 struct fra_req {
 	char fcgx_defined;
 	FCGX_Request fcgx;
 	fra_req_t * next;
 	void * req_store;
 	fra_end_t * endpoint;
-	char * endpoint_store;
+	fra_p_end_store_t * endpoint_store;
 	struct tagbstring url;
 	struct tagbstring base_url;
 	struct tagbstring query_url;

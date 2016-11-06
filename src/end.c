@@ -17,23 +17,13 @@
 
 
 
-// private stuff
-
-struct store_list {
-	struct store_list * next;
-	void * store;
-};
-
-
-
-
 // semi-private functions
 
 int fra_p_end_store_set( fra_req_t * r ) {
 
 	int rc;
 
-	char * cur;
+	fra_p_end_store_t * cur;
 	fra_end_t * e;
 
 
@@ -45,10 +35,13 @@ int fra_p_end_store_set( fra_req_t * r ) {
 
 	if( ! e->store_empty ) {
 
-		cur = malloc( sizeof( char * * ) + e->store_size );
+		cur = malloc( sizeof( fra_p_end_store_t ) + e->store_size );
 		check( cur, unlock_cleanup );
 
-		r->endpoint_store = cur + sizeof( char * * );
+		cur->next = NULL;
+		cur->store = (char *)cur + sizeof( fra_p_end_store_t );
+
+		r->endpoint_store = cur;
 
 		rc = fra_p_req_hook_execute( r, FRA_END_STORE_CREATED );
 		check( rc == 0, cur_cleanup );
@@ -59,7 +52,9 @@ int fra_p_end_store_set( fra_req_t * r ) {
 
 		r->endpoint_store = e->store_empty;
 
-		e->store_empty = *( (char * *)e->store_empty );
+		e->store_empty = e->store_empty->next;
+
+		e->store_empty_count--;
 
 	}
 
@@ -84,7 +79,6 @@ int fra_p_end_store_maybe_free( fra_req_t * r ) {
 
 	int rc;
 
-	char * cur;
 	fra_end_t * e;
 
 
@@ -94,19 +88,18 @@ int fra_p_end_store_maybe_free( fra_req_t * r ) {
 
 		fra_p_lock( &e->lock, final_cleanup );
 
-		if( ( e->store_all_count - e->store_empty_count ) * FRA_CORE_WAITING_ENDPOINT_STORES_GROWTH_FACTOR > e->store_all_count ) {
+		if( e->store_all_count - e->store_empty_count > e->store_all_count * FRA_CORE_WAITING_ENDPOINT_STORES_GROWTH_FACTOR ) {
 
 			rc = fra_p_req_hook_execute( r, FRA_END_STORE_FREE );
 			check( rc == 0, unlock_cleanup );
 
-			free( r->endpoint_store - sizeof( char * * ) );
+			free( r->endpoint_store );
 			e->store_all_count--;
 
 		} else {
 
-			cur = r->endpoint_store;
-			*( (char * * )( r->endpoint_store - sizeof( char * * ) ) ) = e->store_empty;
-			e->store_empty = cur - sizeof( char * * );
+			r->endpoint_store->next = e->store_empty;
+			e->store_empty = r->endpoint_store;
 			e->store_empty_count++;
 
 		}
@@ -190,19 +183,35 @@ int fra_end_free( fra_end_t * e ) {
 	int rc;
 #endif
 
-	char * cur;
+	fra_p_end_store_t * cur;
+	fra_req_t r;
 
 
 	if( e ) {
 
 		fra_p_lock( &e->lock, final_cleanup );
 
+		while( e->store_empty ) {
+
+			cur = e->store_empty;
+
+			e->store_empty = e->store_empty->next;
+
+			r.endpoint = e;
+			r.fcgx_defined = 0;
+			r.endpoint_store = cur;
+
+			rc = fra_p_req_hook_execute( &r, FRA_END_STORE_FREE );
+			check( rc == 0, unlock_cleanup );
+
+			free( cur );
+
+		}
+
 		fra_p_ht_free( e->store_map );
 
 		fra_p_hook_free( e->hooks, FRA_HOOK_COUNT );
 		free( e->hooks );
-
-		for( cur = e->store_empty; cur; cur = *( (char * *)cur ) ) free( cur );
 
 #ifndef NO_PTHREADS
 		fra_p_unlock( &e->lock, e_cleanup );
@@ -214,6 +223,9 @@ int fra_end_free( fra_end_t * e ) {
 	}
 
 	return 0;
+
+unlock_cleanup:
+	fra_p_unlock( &e->lock, e_cleanup );
 
 #ifndef NO_PTHREADS
 e_cleanup:
