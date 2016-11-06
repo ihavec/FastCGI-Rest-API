@@ -23,7 +23,9 @@ int fra_p_glob_hook_execute( enum fra_glob_hook_type type );
 
 int fra_p_req_hook_execute( fra_req_t * req, enum fra_hook_type type );
 
-int fra_p_endpoint_hook_execute( fra_req_t * req, enum fra_hook_type type );
+int fra_p_end_hook_execute( fra_req_t * req, enum fra_hook_type type );
+
+void fra_p_hook_free( fra_p_hook_t * * hooks, int type_count );
 
 #pragma GCC visibility pop
 

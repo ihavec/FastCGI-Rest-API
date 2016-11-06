@@ -158,7 +158,7 @@ fra_end_t * fra_end_new( int var_count ) {
 	e->store_empty_count = 0;
 	e->store_all_count = 0;
 
-	e->hooks = calloc( FRA_GLOB_HOOK_COUNT, sizeof( fra_p_hook_t * ) );
+	e->hooks = calloc( FRA_HOOK_COUNT, sizeof( fra_p_hook_t * ) );
 	check( e->hooks, store_map_cleanup );
 
 	e->callback = NULL;
@@ -199,6 +199,7 @@ int fra_end_free( fra_end_t * e ) {
 
 		fra_p_ht_free( e->store_map );
 
+		fra_p_hook_free( e->hooks, FRA_HOOK_COUNT );
 		free( e->hooks );
 
 		for( cur = e->store_empty; cur; cur = *( (char * *)cur ) ) free( cur );

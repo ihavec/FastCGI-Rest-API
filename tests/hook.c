@@ -58,6 +58,54 @@ final_cleanup:
 
 }
 
+static int created( fra_req_t * r ) {
+
+	debug( "New request created" );
+
+	return 0;
+
+}
+
+static int new( fra_req_t * r ) {
+
+	debug( "New request has come in" );
+
+	return 0;
+
+}
+
+static int e_created( fra_req_t * r ) {
+
+	debug( "e created" );
+
+	return 0;
+
+}
+
+static int e_new( fra_req_t * r ) {
+
+	debug( "e new" );
+
+	return 0;
+
+}
+
+static int e2_created( fra_req_t * r ) {
+
+	debug( "e2 created" );
+
+	return 0;
+
+}
+
+static int e2_new( fra_req_t * r ) {
+
+	debug( "e2 new" );
+
+	return 0;
+
+}
+
 int main() {
 
 	int rc;
@@ -77,8 +125,17 @@ int main() {
 	rc = fra_glob_init();
 	check( rc == 0, final_cleanup );
 
+	rc = fra_req_hook_reg( FRA_REQ_CREATED, created, 0.1f );
+	check( rc == 0, final_cleanup );
+
+	rc = fra_req_hook_reg( FRA_REQ_NEW, new, 0.11f );
+	check( rc == 0, final_cleanup );
+
 	e = fra_end_new( 20 );
 	check( e, final_cleanup );
+
+	rc = fra_end_hook_reg( e, FRA_REQ_NEW, e_new, 0.11f );
+	check( rc == 0, final_cleanup );
 
 	rc = fra_end_callback_set( e, handle );
 	check( rc == 0, final_cleanup );
@@ -97,6 +154,9 @@ int main() {
 
 	e3 = fra_end_new( 20 );
 	check( e3, final_cleanup );
+
+	rc = fra_end_hook_reg( e3, FRA_REQ_NEW, e2_new, 0.11f );
+	check( rc == 0, final_cleanup );
 
 	rc = fra_end_callback_set( e3, handle2 );
 	check( rc == 0, final_cleanup );

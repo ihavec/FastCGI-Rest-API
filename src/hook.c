@@ -150,7 +150,12 @@ final_cleanup:
 
 }
 
-static void hooks_free( fra_p_hook_t * * hooks, int type_count ) {
+
+
+
+// semi-private functions
+
+void fra_p_hook_free( fra_p_hook_t * * hooks, int type_count ) {
 
 	fra_p_hook_t * cur;
 	fra_p_hook_t * next;
@@ -173,11 +178,6 @@ static void hooks_free( fra_p_hook_t * * hooks, int type_count ) {
 
 }
 
-
-
-
-// semi-private functions
-
 int fra_p_hook_init() {
 
 	glob_hooks = calloc( FRA_GLOB_HOOK_COUNT, sizeof( fra_p_hook_t * ) );
@@ -195,8 +195,8 @@ final_cleanup:
 
 void fra_p_hook_deinit() {
 
-	hooks_free( glob_hooks, FRA_GLOB_HOOK_COUNT );
-	hooks_free( req_hooks, FRA_HOOK_COUNT );
+	fra_p_hook_free( glob_hooks, FRA_GLOB_HOOK_COUNT );
+	fra_p_hook_free( req_hooks, FRA_HOOK_COUNT );
 	free( glob_hooks );
 	free( req_hooks );
 
@@ -219,6 +219,16 @@ int fra_p_glob_hook_execute( enum fra_glob_hook_type type ) {
 
 int fra_p_req_hook_execute( fra_req_t * req, enum fra_hook_type type ) {
 
+	int rc;
+
+
+	if( req && req->endpoint ) {
+
+		rc = fra_p_end_hook_execute( req, type );
+		check( rc == 0, final_cleanup );
+
+	}
+
 	return hook_execute(
 #ifndef NO_PTHREADS
 			&req_hooks_lock,
@@ -229,6 +239,9 @@ int fra_p_req_hook_execute( fra_req_t * req, enum fra_hook_type type ) {
 			1,
 			req
 			);
+
+final_cleanup:
+	return -1;
 
 }
 
