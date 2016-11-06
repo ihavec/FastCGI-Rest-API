@@ -1,6 +1,7 @@
 #include <fra/core.h>
 #include "../src/dbg.h"
 #include <bstrlib.h>
+#include <stdlib.h>
 
 
 
@@ -95,6 +96,40 @@ final_cleanup:
 
 }
 
+static int create_req_vars( fra_req_t * r ) {
+
+	char * s;
+
+
+	debug( "I have run" );
+
+	s = malloc( 4 );
+	check( s, final_cleanup );
+
+	s[0] = 'a';
+	s[1] = 'b';
+	s[2] = 'c';
+	s[3] = '\0';
+
+	fra( r, "mystr", char * ) = s;
+
+	return 0;
+
+final_cleanup:
+	return -1;
+
+}
+
+static int destroy_req_vars( fra_req_t * r ) {
+
+	debug( "I too, have run" );
+
+	free( fra( r, "mystr", char * ) );
+
+	return 0;
+
+}
+
 static int destroy_vars( fra_req_t * r ) {
 
 	if( fra_req_endpoint( r ) == e ) {
@@ -125,6 +160,7 @@ static int handle( fra_req_t * req ) {
 			"name: %s;\n"
 			"}\n"
 			"%s\n"
+			"%s\n"
 			"call produced: %.3f\n"
 			"call_wrap produced: %.3f\n"
 			"\n",
@@ -139,6 +175,7 @@ static int handle( fra_req_t * req ) {
 			fra( req, "my", struct my_struct ).nest.value,
 			fra( req, "my", struct my_struct ).name,
 			fra( req, "your", nnn ).value,
+			fra( req, "mystr", char * ),
 			fra( req, "firsty", float ),
 			fra( req, "lasty", float )
 		    );
@@ -191,6 +228,12 @@ int main() {
 	rc = fra_req_hook_reg( FRA_REQ_NEW, set_vars, 0.099f );
 	check( rc == 0, final_cleanup );
 
+	rc = fra_req_hook_reg( FRA_REQ_CREATED, create_req_vars, 0.099f );
+	check( rc == 0, final_cleanup );
+
+	rc = fra_req_hook_reg( FRA_REQ_FREE, destroy_req_vars, 0.099f );
+	check( rc == 0, final_cleanup );
+
 	rc = fra_req_hook_reg( FRA_END_STORE_CREATED, create_vars, 0.099f );
 	check( rc == 0, final_cleanup );
 
@@ -227,6 +270,9 @@ int main() {
 	check( rc == 0, final_cleanup );
 
 	rc = fra_reg( e, "lasty", float );
+	check( rc == 0, final_cleanup );
+
+	rc = fra_req_reg( "mystr", char * );
 	check( rc == 0, final_cleanup );
 
 	// This should produce a warning on a good enough compiler following the C standard

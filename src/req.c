@@ -247,6 +247,10 @@ void fra_p_req_deinit() {
 
 		empty_req = empty_req->next;
 
+		cur->endpoint = NULL;
+
+		fra_p_req_hook_execute( cur, FRA_REQ_FREE );
+
 		free( cur );
 
 	}
