@@ -1,3 +1,9 @@
 [submodule "libs/bstrlib"]
 	path = libs/bstrlib
 	url = https://github.com/websnarf/bstrlib.git
+[submodule "libs/jsmn"]
+	path = libs/jsmn
+	url = https://github.com/zserge/jsmn
+[submodule "libs/jsmn-jsonpath"]
+	path = libs/jsmn-jsonpath
+	url = https://github.com/jakgra/jsmn-jsonpath
