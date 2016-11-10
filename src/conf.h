@@ -34,7 +34,7 @@ int fra_p_conf_num_or_bool( int id );
 
 bstring fra_p_conf_str( int id );
 
-int fra_p_conf_str_arr( int id, bstring * result, int result_len );
+bstring * fra_p_conf_str_arr( int id, int * result_len );
 
 
 #pragma GCC visibility pop

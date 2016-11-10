@@ -106,11 +106,13 @@ final_cleanup:
 
 }
 
-static int set_value( struct conf * c, char * s, jsmntok_t * t, jsmntok_t * p ) {
+static int set_value( struct conf * c, char * s, jsmntok_t * t, jsmntok_t * p, jsmntok_t * tok, int tok_count, int cur ) {
 
 	int rc;
 
 	int val;
+	int i;
+	bstring * tmp;
 
 
 	if( c->type == FRA_P_CONF_STR ) {
@@ -156,6 +158,33 @@ static int set_value( struct conf * c, char * s, jsmntok_t * t, jsmntok_t * p ) 
 
 		num_or_bools[ c->id ] = val;
 
+	} else if( c->type == FRA_P_CONF_STR_ARR ){
+
+		str_arr_destroy( &str_arrs[ c->id ] );
+
+		check( t->type == JSMN_ARRAY, not_a_str_arr_cleanup );
+
+		//r = jjp_jsonpath( s, tok, tok_count, bdata( jpath ), 0 );
+		//check( r, final_cleanup );
+
+		for( i = cur + 1; i < tok_count; i++ ) {
+
+			check( tok[i].type == JSMN_STRING, not_a_str_arr_cleanup );
+
+			if( tok[i].parent != cur ) break;
+
+			tmp = realloc( str_arrs[ c->id ].v, ( str_arrs[ c->id ].l + 1 ) * sizeof( bstring ) );
+			check( tmp, str_arrs_cleanup );
+
+			str_arrs[ c->id ].v = tmp;
+
+			str_arrs[ c->id ].v[ str_arrs[ c->id ].l ] = blk2bstr( s + tok[i].start, tok[i].end - tok[i].start );
+			check( str_arrs[ c->id ].v[ str_arrs[ c->id ].l ], str_arrs_cleanup );
+
+			str_arrs[ c->id ].l++;
+
+		}
+
 	} else {
 
 		check( 0, final_cleanup );
@@ -181,54 +210,23 @@ not_a_number_cleanup:
 		 );
 	return -1;
 
-final_cleanup:
-	return -1;
+not_a_str_arr_cleanup:
+	log_err_v(
+			"Error in configuration file. The value for the \"%.*s\" key "
+			"has to be a json array of strings. Example: [ \"hej\", \"hoj\" ]",
+			p->end - p->start,
+			s + p->start
+		 );
 
-}
-
-
-
-
-// semi-private
-
-int fra_p_conf_init() {
-
-	int i;
-
-
-	for( i = 0; i < FRA_P_CONF_STR_COUNT; i++ ) {
-
-		g_strings[i] = bfromcstr( "" );
-		check( g_strings[i], final_cleanup );
-
-	}
-
-	for( i = 0; i < FRA_P_CONF_STR_ARR_COUNT; i++ ) {
-
-		str_arrs[i].v = NULL;
-		str_arrs[i].l = 0;
-
-	}
-
-	for( i = 0; i < FRA_P_CONF_NUM_OR_BOOL_COUNT; i++ ) num_or_bools[i] = 0;
-
-	return 0;
+str_arrs_cleanup:
+	str_arr_destroy( &str_arrs[ c->id ] );
 
 final_cleanup:
 	return -1;
 
 }
 
-void fra_p_conf_deinit() {
-
-	int i;
-
-
-	for( i = 0; i < FRA_P_CONF_STR_COUNT; i++ ) bdestroy( g_strings[i] );
-
-}
-
-int fra_p_conf_load( char * filename ) {
+static int conf_load_recurse( char * filename ) {
 
 	int rc;
 
@@ -248,19 +246,6 @@ int fra_p_conf_load( char * filename ) {
 	DIR * dir;
 	struct dirent * dent;
 
-
-	// TODO
-	// Using jsmn and jsonpath parse the config file that is passed to fra_glob_init( char * filename )
-	// comments in json can be made as additional json objects:
-	// example:
-	// {
-	// "#": " Should we also check the standard library paths ( /lib, /usr/lib, ... ) for the ",
-	// "#": " *.so files of the enabled plugins ? Can be true or false.",
-	// "check standard paths": true
-	// }
-
-	rc = set_defaults();
-	check( rc == 0, final_cleanup );
 
 	f = fopen( filename, "r" );
 	check_msg_v( f, final_cleanup, "No configuration file found at path \"%s\".", filename );
@@ -304,7 +289,7 @@ int fra_p_conf_load( char * filename ) {
 			new_filename = blk2bstr( bdata( f_str ) + t[ r->tokens[i] ].start, t[ r->tokens[i] ].end - t[ r->tokens[i] ].start );
 			check( new_filename, r_cleanup );
 
-			rc = fra_p_conf_load( bdata( new_filename ) );
+			rc = conf_load_recurse( bdata( new_filename ) );
 			bdestroy( new_filename );
 			check( rc == 0, r_cleanup );
 
@@ -326,7 +311,7 @@ int fra_p_conf_load( char * filename ) {
 					new_filename = bformat( "%s/%s", bdata( dirname ), dent->d_name );
 					check( new_filename, dir_cleanup );
 
-					rc = fra_p_conf_load( bdata( new_filename ) );
+					rc = conf_load_recurse( bdata( new_filename ) );
 					bdestroy( new_filename );
 					check( rc == 0, dir_cleanup );
 
@@ -345,7 +330,15 @@ int fra_p_conf_load( char * filename ) {
 
 				if( biseqcstr( &key, confs[j].name ) == 1 ) {
 
-					rc = set_value( &confs[j], bdata( f_str ), &t[ r->tokens[i] ], &t[ t[ r->tokens[i] ].parent ] );
+					rc = set_value(
+							&confs[j],
+							bdata( f_str ),
+							&t[ r->tokens[i] ],
+							&t[ t[ r->tokens[i] ].parent ],
+							t,
+							t_len,
+							r->tokens[i]
+						      );
 					check( rc == 0, r_cleanup );
 
 					break;
@@ -393,6 +386,65 @@ final_cleanup:
 
 }
 
+
+
+
+// semi-private
+
+int fra_p_conf_init() {
+
+	int i;
+
+
+	for( i = 0; i < FRA_P_CONF_STR_COUNT; i++ ) {
+
+		g_strings[i] = bfromcstr( "" );
+		check( g_strings[i], final_cleanup );
+
+	}
+
+	for( i = 0; i < FRA_P_CONF_STR_ARR_COUNT; i++ ) {
+
+		str_arrs[i].v = NULL;
+		str_arrs[i].l = 0;
+
+	}
+
+	for( i = 0; i < FRA_P_CONF_NUM_OR_BOOL_COUNT; i++ ) num_or_bools[i] = 0;
+
+	return 0;
+
+final_cleanup:
+	return -1;
+
+}
+
+void fra_p_conf_deinit() {
+
+	int i;
+
+
+	for( i = 0; i < FRA_P_CONF_STR_COUNT; i++ ) bdestroy( g_strings[i] );
+
+	for( i = 0; i < FRA_P_CONF_STR_ARR_COUNT; i++ ) str_arr_destroy( &str_arrs[i] );
+
+}
+
+int fra_p_conf_load( char * filename ) {
+
+	int rc;
+
+
+	rc = set_defaults();
+	check( rc == 0, final_cleanup );
+
+	return conf_load_recurse( filename );
+
+final_cleanup:
+	return -1;
+
+}
+
 int fra_p_conf_num_or_bool( int id ) {
 
 	return num_or_bools[id];
@@ -405,4 +457,9 @@ bstring fra_p_conf_str( int id ) {
 
 }
 
-int fra_p_conf_str_arr( int id, bstring * result, int result_len );
+bstring * fra_p_conf_str_arr( int id, int * result_len ) {
+
+	*result_len = str_arrs[id].l;
+
+	return str_arrs[id].v;
+}
