@@ -10,13 +10,12 @@
 
 
 enum fra_p_conf_num_or_bool {
-	FRA_P_CONF_CHECK_STD_PATHS,
+	FRA_P_CONF_THREAD_SAFE,
 	FRA_P_CONF_NUM_OR_BOOL_COUNT
 };
 
 enum fra_p_conf_str {
 	FRA_P_CONF_PLUGINS_DIR,
-	FRA_P_CONF_CONF_D_DIR,
 	FRA_P_CONF_STR_COUNT
 };
 

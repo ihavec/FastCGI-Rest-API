@@ -1,5 +1,21 @@
 {
-	"test": "buhu",
-	"#": "A comment",
-	"#": "Another comment"
+
+	"#": "This is a comment",
+
+	"#": "Should the library functions be thread safe? A json boolean value (true/false).",
+	"#": "By default false.",
+	"thread safe": false,
+
+	"#": "The root directory for plugins",
+	"plugins directory": "/home/user/fra/plugins",
+
+	"#": "To include additional configuration files in this one use the include key.",
+	"#": "Should be a json string of the relative (to the programs working directory)",
+	"#": "or absolute path to the config file.",
+	"include": "conf.included.json",
+
+	"#": "Same as include but includes all files in the specified directory.",
+	"#": "Similar as conf.d in some programs.",
+	"include directory": "conf.d"
+
 }

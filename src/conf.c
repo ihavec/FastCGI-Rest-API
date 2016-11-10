@@ -6,6 +6,7 @@
 #include <jsmn.h>
 #include <jsonpath.h>
 #include <bstrlib.h>
+#include <dirent.h>
 
 
 
@@ -38,9 +39,9 @@ struct conf {
 };
 
 static struct conf confs[] = {
-	{ "something", FRA_P_CONF_STR, FRA_P_CONF_PLUGINS_DIR, "/etc/fra/plugins", 0 },
-	{ "check standard paths", FRA_P_CONF_BOOLEAN, FRA_P_CONF_CHECK_STD_PATHS, NULL, 0 },
-	{ "enabled plugins", FRA_P_CONF_STR_ARR, FRA_P_CONF_ENABLED_PLUGINS, NULL, 0 }
+	{ "plugins directory", FRA_P_CONF_STR, FRA_P_CONF_PLUGINS_DIR, "/etc/fra/plugins", 0 },
+	{ "thread safe", FRA_P_CONF_BOOLEAN, FRA_P_CONF_THREAD_SAFE, "", 0 },
+	{ "enabled plugins", FRA_P_CONF_STR_ARR, FRA_P_CONF_ENABLED_PLUGINS, "", 0 }
 };
 
 static void str_arr_destroy( struct str_arr * a ) {
@@ -241,9 +242,11 @@ int fra_p_conf_load( char * filename ) {
 	jjp_result_t * r;
 	unsigned int i;
 	struct tagbstring key;
-	struct tagbstring cmp_key;
 	bstring new_filename;
+	bstring dirname;
 	unsigned int j;
+	DIR * dir;
+	struct dirent * dent;
 
 
 	// TODO
@@ -296,7 +299,7 @@ int fra_p_conf_load( char * filename ) {
 		if( biseqStatic( &key, "include" ) == 1 ) {
 
 			check_msg( t[ r->tokens[i] ].type == JSMN_STRING, r_cleanup,
-					"Error in configuration file. The value for the include key has to be a string." );
+					"Error in configuration file. The value for the \"include\" key has to be a string." );
 
 			new_filename = blk2bstr( bdata( f_str ) + t[ r->tokens[i] ].start, t[ r->tokens[i] ].end - t[ r->tokens[i] ].start );
 			check( new_filename, r_cleanup );
@@ -305,17 +308,44 @@ int fra_p_conf_load( char * filename ) {
 			bdestroy( new_filename );
 			check( rc == 0, r_cleanup );
 
+		} else if( biseqStatic( &key, "include directory" ) == 1 ) {
+
+			check_msg( t[ r->tokens[i] ].type == JSMN_STRING, r_cleanup,
+					"Error in configuration file. The value for the \"include dir\" key has to be a string." );
+
+			dirname = blk2bstr( bdata( f_str ) + t[ r->tokens[i] ].start, t[ r->tokens[i] ].end - t[ r->tokens[i] ].start );
+			check( dirname, r_cleanup );
+
+			dir = opendir( (char *)dirname->data );
+			check( dir, dirname_cleanup );
+
+			while( ( dent = readdir( dir ) ) ) {
+
+				if( dent->d_name[0] != '.' ) {
+
+					new_filename = bformat( "%s/%s", bdata( dirname ), dent->d_name );
+					check( new_filename, dir_cleanup );
+
+					rc = fra_p_conf_load( bdata( new_filename ) );
+					bdestroy( new_filename );
+					check( rc == 0, dir_cleanup );
+
+				}
+
+			}
+
+			rc = closedir( dir );
+			check( rc == 0, dirname_cleanup );
+
+			bdestroy( dirname );
+
 		} else {
 
 			for( j = 0; j < sizeof( confs ) / sizeof( struct conf ); j++ ) {
 
-				cmp_key.mlen = -1;
-				cmp_key.slen = sizeof( confs[i].name ) - 1;
-				cmp_key.data = (unsigned char *)confs[i].name;
+				if( biseqcstr( &key, confs[j].name ) == 1 ) {
 
-				if( biseq( &key, &cmp_key ) == 1 ) {
-
-					rc = set_value( &confs[i], bdata( f_str ), &t[ r->tokens[i] ], &t[ t[ r->tokens[i] ].parent ] );
+					rc = set_value( &confs[j], bdata( f_str ), &t[ r->tokens[i] ], &t[ t[ r->tokens[i] ].parent ] );
 					check( rc == 0, r_cleanup );
 
 					break;
@@ -325,12 +355,6 @@ int fra_p_conf_load( char * filename ) {
 			}
 
 		}
-
-		printf( "Value for key \"%.*s\" is: \"%.*s\"\n",
-				t[ t[ r->tokens[i] ].parent ].end - t[ t[ r->tokens[i] ].parent ].start,
-				bdata( f_str ) + t[ t[ r->tokens[i] ].parent ].start,
-				t[ r->tokens[i] ].end - t[ r->tokens[i] ].start,
-				bdata( f_str ) + t[ r->tokens[i] ].start );
 
 	}
 
@@ -343,6 +367,13 @@ int fra_p_conf_load( char * filename ) {
 
 
 	return 0;
+
+dir_cleanup:
+	rc = closedir( dir );
+	check( rc == 0, r_cleanup );
+
+dirname_cleanup:
+	bdestroy( dirname );
 
 r_cleanup:
 	jjp_result_destroy( r );
@@ -364,10 +395,14 @@ final_cleanup:
 
 int fra_p_conf_num_or_bool( int id ) {
 
-	return id;
+	return num_or_bools[id];
 
 }
 
-bstring fra_p_conf_str( int id );
+bstring fra_p_conf_str( int id ) {
+
+	return g_strings[id];
+
+}
 
 int fra_p_conf_str_arr( int id, bstring * result, int result_len );
