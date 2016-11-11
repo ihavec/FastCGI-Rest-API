@@ -1,4 +1,4 @@
 {
 	"#": "Values can be overwritten:",
-	"plugins directory": "/buhu/behe/plugins"
+	"plugin directories": [ "/buhu/behe/plugins" ]
 }

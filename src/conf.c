@@ -1,6 +1,7 @@
 #include "conf.h"
 
 #include "dbg.h"
+#include "pl.h"
 
 #include <stdlib.h>
 #include <jsmn.h>
@@ -39,9 +40,9 @@ struct conf {
 };
 
 static struct conf confs[] = {
-	{ "plugins directory", FRA_P_CONF_STR, FRA_P_CONF_PLUGINS_DIR, "/etc/fra/plugins", 0 },
-	{ "thread safe", FRA_P_CONF_BOOLEAN, FRA_P_CONF_THREAD_SAFE, "", 0 },
-	{ "enabled plugins", FRA_P_CONF_STR_ARR, FRA_P_CONF_ENABLED_PLUGINS, "", 0 }
+	{ "plugin directories", FRA_P_CONF_STR_ARR, FRA_P_CONF_PLUGINS_DIR, NULL, 0 },
+	{ "search standard paths", FRA_P_CONF_BOOLEAN, FRA_P_CONF_THREAD_SAFE, NULL, 0 },
+	{ "thread safe", FRA_P_CONF_BOOLEAN, FRA_P_CONF_THREAD_SAFE, NULL, 0 }
 };
 
 static void str_arr_destroy( struct str_arr * a ) {
@@ -67,6 +68,8 @@ static int set_defaults() {
 
 	unsigned int i;
 
+
+	fra_p_pl_reset();
 
 	for( i = 0; i < sizeof( confs ) / sizeof( struct conf ); i++ ) {
 
@@ -100,6 +103,76 @@ static int set_defaults() {
 	}
 
 	return 0;
+
+final_cleanup:
+	return -1;
+
+}
+
+static int set_plugins( char * s, jsmntok_t * t, int t_c, int c ) {
+
+#define rc_err "Error while parsing the \"enabled plugins\" configuration option.\n" \
+	"It should look similar to this: \"enabled plugins\": {\"fra_pl\": [\"/etc/fra/fra_pl.conf\"]}"
+
+	int i;
+	fra_p_pl_t * pl;
+	int cur_pl;
+	char * * tmp;
+	int str_len;
+
+
+
+	check_msg( t[c].type == JSMN_OBJECT, final_cleanup, rc_err );
+
+	for( i = c + 1; i < t_c - 1 && t[i].parent == c && t[i].end <= t[c].end; ) {
+
+		check_msg(
+				t[i].type == JSMN_STRING
+				&& t[ i + 1 ].parent == i
+				&& t[ i + 1 ].type == JSMN_ARRAY,
+				final_cleanup,
+				rc_err
+		     );
+
+		pl = malloc( sizeof( fra_p_pl_t ) );
+		check( pl, final_cleanup );
+
+		pl->name = blk2bstr( s + t[i].start, t[i].end - t[i].start );
+		check( pl->name, pl_cleanup );
+
+		pl->argv = NULL;
+		pl->argc = 0;
+
+		cur_pl = i + 1;
+
+		for( i = i + 2; i < t_c && t[i].parent == cur_pl && t[i].end <= t[ cur_pl ].end; i++ ) {
+
+			check_msg( t[i].type == JSMN_STRING, pl_cleanup, rc_err );
+
+			tmp = realloc( pl->argv, ( pl->argc + 1 ) * sizeof( char * ) );
+			check( tmp, pl_cleanup );
+			pl->argv = tmp;
+
+			pl->argc++;
+
+			str_len = t[i].end - t[i].start;
+
+			pl->argv[ pl->argc - 1 ] = malloc( str_len + 1 );
+			check( pl->argv[ pl->argc - 1 ], pl_cleanup );
+
+			memcpy( pl->argv[ pl->argc - 1 ], s + t[i].start, str_len );
+			pl->argv[ pl->argc - 1 ][ str_len ] = '\0';
+
+		}
+
+		fra_p_pl_add( pl );
+
+	}
+
+	return 0;
+
+pl_cleanup:
+	fra_p_pl_free( pl );
 
 final_cleanup:
 	return -1;
@@ -324,6 +397,15 @@ static int conf_load_recurse( char * filename ) {
 
 			bdestroy( dirname );
 
+		} else if( biseqStatic( &key, "enabled plugins" ) == 1 ) {
+			rc = set_plugins(
+					bdata( f_str ),
+					t,
+					t_len,
+					r->tokens[i]
+					);
+			check( rc == 0, r_cleanup );
+
 		} else {
 
 			for( j = 0; j < sizeof( confs ) / sizeof( struct conf ); j++ ) {
@@ -423,6 +505,8 @@ void fra_p_conf_deinit() {
 
 	int i;
 
+
+	fra_p_pl_reset();
 
 	for( i = 0; i < FRA_P_CONF_STR_COUNT; i++ ) bdestroy( g_strings[i] );
 

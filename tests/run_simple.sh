@@ -1,7 +1,7 @@
 #!/bin/bash
 
 t=$1
-cc -I../include -I../libs/bstrlib -Wall -Wextra -pedantic -std=gnu99 -g $t.c ../build/libfra.a -o $t-test
+cc -I../include -I../libs/bstrlib -Wall -Wextra -pedantic -std=gnu99 -g $t.c ../build/libfra.a -ldl -o $t-test
 echo "++++++++++====================++++++++++"
 echo "-----> Running test \"$t\" ..."
 if ./$t-test

@@ -6,14 +6,23 @@
 	"#": "By default false.",
 	"thread safe": false,
 
-	"#": "The root directory for plugins",
-	"plugins directory": "/home/user/fra/plugins",
+	"#": "Should the standard library paths from dlopen() also be searched for the plugin",
+	"#": "libraries. A json boolean value (true/false).  By default true.",
+	"search standard paths": false,
 
-	"enabled plugins": [
-		"fra_pl",
-		"fra_my",
-		"fra_curl"
-	],
+	"#": "Additional paths where to search for plugin libraries ( *.so files)",
+	"#": "An array of json strings. Can also contain relative path to the current",
+	"#": "working directory. By default []",
+	"plugin directories": [ "libs" ],
+
+	"#": "The ${plugin_name}_main_init( int argc, char * * argv ) is called with",
+	"#": "the arguments json string array you provide here",
+	"#": "By default there are no plugins enabled",
+	"enabled plugins": {
+		"fra_pl": [ "/etc/fra/fra_pl.conf" ],
+		"fra_my": [ "/etc/fra_my.conf" ],
+		"fra_curl": [ "/etc/share/ssl", "/opt/lib/libcurl.a" ]
+	},
 
 	"#": "To include additional configuration files in this one use the include key.",
 	"#": "Should be a json string of the relative (to the programs working directory)",
