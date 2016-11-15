@@ -1,3 +1,4 @@
 *-test
 *.valgrind.log
 test*
+*.so
