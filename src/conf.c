@@ -40,8 +40,6 @@ struct conf {
 };
 
 static struct conf confs[] = {
-	{ "plugin directories", FRA_P_CONF_STR_ARR, FRA_P_CONF_PLUGINS_DIR, NULL, 0 },
-	{ "search standard paths", FRA_P_CONF_BOOLEAN, FRA_P_CONF_THREAD_SAFE, NULL, 0 },
 	{ "thread safe", FRA_P_CONF_BOOLEAN, FRA_P_CONF_THREAD_SAFE, NULL, 0 }
 };
 

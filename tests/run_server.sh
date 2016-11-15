@@ -1,7 +1,7 @@
 #!/bin/bash
 
 t=$1
-cc -I../include -I../libs/bstrlib -Wall -Wextra -pedantic -std=gnu99 -g $t.c ../build/libfra.a -lfcgi -ldl -o test
+cc $(./get_cflags.sh) $t.c ../build/libfra.a -lfcgi -ldl -o test
 echo "++++++++++====================++++++++++"
 echo "-----> Running test \"$t\" ..."
 cat > test.conf <<EOF

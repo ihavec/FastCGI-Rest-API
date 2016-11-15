@@ -1,4 +1,4 @@
 {
 	"#": "Values can be overwritten:",
-	"thread safe": true
+	"thread safe": false
 }

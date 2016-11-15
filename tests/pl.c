@@ -1,6 +1,6 @@
+#include "../src/pl.h"
 #include "../src/conf.h"
 #include "../src/dbg.h"
-#include <bstrlib.h>
 
 
 
@@ -13,10 +13,14 @@ int main() {
 	rc = fra_p_conf_init();
 	check( rc == 0, final_cleanup );
 
-	rc = fra_p_conf_load( "conf.json" );
+	rc = fra_p_conf_load( "pl.json" );
 	check( rc == 0, final_cleanup );
 
-	check( fra_p_conf_num_or_bool( FRA_P_CONF_THREAD_SAFE ) == 1, final_cleanup );
+	rc = fra_p_pl_load();
+	check( rc == 0, final_cleanup );
+
+	rc = fra_p_pl_unload();
+	check( rc == 0, final_cleanup );
 
 	fra_p_conf_deinit();
 

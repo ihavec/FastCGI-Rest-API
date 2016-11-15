@@ -18,6 +18,19 @@ do
 	fi
 done
 
+for t in pl
+do
+	echo "++++++++++====================++++++++++"
+	echo "-----> Running test \"$t\" ..."
+	if ./$t.sh
+	then
+		echo "**** \"$t\" test succeded :)"
+	else
+		echo "!!!! \"$t\" test failed :("
+		exit $?
+	fi
+done
+
 echo "###############################################################"
 echo "###############################################################"
 echo "##############       ALL TESTS SUCCEEDED :)    ################"

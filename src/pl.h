@@ -14,6 +14,7 @@ typedef struct fra_p_pl {
 	bstring name;
 	char * * argv;
 	int argc;
+	void * h;
 } fra_p_pl_t;
 
 
@@ -22,6 +23,10 @@ void fra_p_pl_free( fra_p_pl_t * pl );
 void fra_p_pl_reset();
 
 void fra_p_pl_add( fra_p_pl_t * pl );
+
+int fra_p_pl_load();
+
+int fra_p_pl_unload();
 
 
 #pragma GCC visibility pop
