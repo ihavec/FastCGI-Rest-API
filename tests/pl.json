@@ -1,6 +1,6 @@
 {
 	"enabled plugins": {
-		"libfra_test.so": [ "/etc/fra/fra_pl.conf" ],
-		"pl/libfra_test2.so": [ "/etc/fra/fra_test2.conf" ]
+		"libfra_test.so": [ "main_func", "/etc/fra/fra_pl.conf" ],
+		"pl/libfra_test2.so": [ "fra_test_init", "/etc/fra/fra_test2.conf" ]
 	}
 }

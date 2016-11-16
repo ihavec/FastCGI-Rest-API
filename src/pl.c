@@ -85,15 +85,24 @@ int fra_p_pl_load() {
 				( rc_msg = dlerror() ) ? rc_msg : ""
 			   );
 
+		check_msg_v(
+				c->argc > 0, h_cleanup,
+				"You must specify which function to call to initialize the \"%s\" library "
+				"by providing a json string array  for the \"%s\" key in the config file "
+				"(first element is the function name and all the elements get passed to "
+				"the init function using the int main( int argc, char * * argv ) style ).",
+				bdata( c->name ),
+				bdata( c->name )
+		     );
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
-		s = dlsym( c->h, "main_init" );
+		s = dlsym( c->h, c->argv[0] );
 #pragma GCC diagnostic pop
 		check_msg_v(
-				s, final_cleanup,
+				s, h_cleanup,
 				"Could not find the function \"%s\" in the \"%s\" library."
 				"The error was: \"%s\".",
-				bdata( c->name ),
+				c->argv[0],
 				bdata( c->name ),
 				( rc_msg = dlerror() ) ? rc_msg : ""
 		     );
@@ -116,6 +125,7 @@ int fra_p_pl_load() {
 h_cleanup:
 	rc = dlclose( c->h );
 	check( rc == 0, final_cleanup );
+	c->h = NULL;
 
 final_cleanup:
 	return -1;

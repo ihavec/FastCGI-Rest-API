@@ -1,4 +1,4 @@
-int main_init( int argc, char * argv ) {
+int main_func( int argc, char * argv ) {
 
 	return 0;
 

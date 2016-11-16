@@ -6,13 +6,15 @@
 	"#": "By default false.",
 	"thread safe": true,
 
-	"#": "The main_init( int argc, char * * argv ) is called with",
-	"#": "the arguments json string array you provide here",
+	"#": "The ${FUNC_NAME}( int argc, char * * argv ) is called with",
+	"#": "the arguments json string array you provide here.",
+	"#": "The ${FUNC_NAME} is the first argument in the json array",
+	"#": "and the name of the function you wan't to be called",
 	"#": "By default there are no plugins enabled",
 	"enabled plugins": {
-		"fra_pl": [ "/etc/fra/fra_pl.conf" ],
-		"fra_my": [ "/etc/fra_my.conf" ],
-		"fra_curl": [ "/etc/share/ssl", "/opt/lib/libcurl.a" ]
+		"fra_pl": [ "fra_pl_init", "/my/app/path/plugins" ],
+		"fra_my": [ "fra_my_init", "/etc/fra_my.conf" ],
+		"fra_curl": [ "completely_custom_function_name", "/etc/share/ssl", "/opt/lib/libcurl.a" ]
 	},
 
 	"#": "To include additional configuration files in this one use the include key.",
