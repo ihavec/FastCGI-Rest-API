@@ -94,11 +94,11 @@ int main() {
 	e2 = get_end( "POST", "/buhu" );
 	check( e2 == NULL, final_cleanup );
 
-	fra_end_free( e );
+	fra_end_destroy( e );
 
-	fra_end_free( e3 );
+	fra_end_destroy( e3 );
 
-	fra_end_free( e4 );
+	fra_end_destroy( e4 );
 
 	fra_p_url_deinit();
 

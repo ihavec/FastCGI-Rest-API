@@ -18,7 +18,7 @@ int main() {
 	e = fra_end_new( 100 );
 	check( e, final_cleanup );
 
-	fra_end_free( e );
+	fra_end_destroy( e );
 
 	fra_p_var_deinit();
 

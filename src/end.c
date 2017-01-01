@@ -177,7 +177,7 @@ final_cleanup:
 
 }
 
-int fra_end_free( fra_end_t * e ) {
+int fra_end_destroy( fra_end_t * e ) {
 
 #ifndef NO_PTHREADS
 	int rc;
