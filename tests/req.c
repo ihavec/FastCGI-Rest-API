@@ -127,11 +127,11 @@ int main() {
 	rc = fra_glob_poll();
 	check( rc == 0, final_cleanup );
 
-	fra_end_destroy( e_finish );
+	fra_end_free( e_finish );
 
 	for( i = 0; i < COUNT; i++ ) {
 		
-		fra_end_destroy( e[i] );
+		fra_end_free( e[i] );
 
 		bdestroy( urls[i] );
 

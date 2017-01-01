@@ -152,11 +152,11 @@ int main() {
 	rc = fra_glob_poll();
 	check( rc == 0, final_cleanup );
 
-	fra_end_destroy( e );
+	fra_end_free( e );
 
-	fra_end_destroy( e2 );
+	fra_end_free( e2 );
 
-	fra_end_destroy( e3 );
+	fra_end_free( e3 );
 
 	fra_glob_deinit();
 
