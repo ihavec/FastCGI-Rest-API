@@ -38,6 +38,12 @@ void fra_glob_deinit();
 #define fra( request, name, type ) ( *( (type *)fra_var_get( request, name, sizeof( name ), #type, sizeof( #type ) ) ) )
 
 /**
+ * Same as fra() but allows dynamic strings. You have to specify the length of the string.
+ * Useful for dynamic variable names.
+ */
+#define fra_ds( request, name, name_len, type ) ( *( (type *)fra_var_get( request, name, name_len, #type, sizeof( #type ) ) ) )
+
+/**
  * Utility macros for for getting variables of all native C types and some widely used pointers
  */
 // native types
