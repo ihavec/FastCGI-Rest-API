@@ -211,6 +211,27 @@ final_cleanup:
 
 }
 
+void exit_request() {
+
+	FCGX_Request fcgx;
+
+	FCGX_InitRequest( &fcgx, 0, 0 );
+
+	FCGX_Accept_r( &fcgx );
+
+	FCGX_FPrintF(
+			fcgx.out,
+			"Status: 500 Internal Server Error\r\n"
+			"Content-type: application/json; charset=utf-8\r\n"
+			"\r\n"
+			"{ \"s\":-1, \"error\": \"Go away\" }"
+			"\r\n"
+		    );
+
+	FCGX_Finish_r( &fcgx );
+
+}
+
 
 
 
@@ -260,6 +281,8 @@ void fra_p_req_deinit() {
 int fra_p_req_handle_new( short revents ) {
 
 	int rc;
+	int rc_ex = 1;
+
 	fra_req_t * req;
 
 
@@ -329,6 +352,7 @@ int fra_p_req_handle_new( short revents ) {
 	return 0;
 
 fcgx_cleanup:
+	rc_ex = 0;
 	FCGX_FPrintF(
 			req->fcgx.out,
 			"Status: 500 Internal Server Error\r\n"
@@ -344,6 +368,7 @@ req_cleanup:
 	check( rc == 0, final_cleanup );
 
 final_cleanup:
+	if( rc_ex ) exit_request();
 	return -1;
 
 }
