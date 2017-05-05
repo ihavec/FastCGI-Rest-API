@@ -107,7 +107,7 @@ static void * var_get(
 		if( type_ptr ) {
 
 			*type_ptr = bdata( var->type );
-			if( type_len_ptr ) type_len_ptr = blength( var->type );
+			if( type_len_ptr ) *type_len_ptr = blength( var->type );
 
 		} else {
 
@@ -137,7 +137,7 @@ static void * var_get(
 		if( type_ptr ) {
 
 			*type_ptr = bdata( var->type );
-			if( type_len_ptr ) type_len_ptr = blength( var->type );
+			if( type_len_ptr ) *type_len_ptr = blength( var->type );
 
 		} else {
 
@@ -266,11 +266,11 @@ void * fra_var_get( fra_req_t * request,  const char * name, int name_len, const
 	return var_get( request, name, name_len, type, type_len, NULL, NULL );
 }
 
-void * fra_var_get_with_type( fra_req_t * request,  const char * name, int name_len, const char * * type_prt, int * type_len_ptr ) {
+void * fra_var_get_with_type( fra_req_t * request,  const char * name, int name_len, const char * * type_ptr, int * type_len_ptr ) {
 
 	check( type_ptr, final_cleanup );
 
-	return var_get( request, name, name_len, NULL, NULL, type_ptr, type_len_ptr );
+	return var_get( request, name, name_len, NULL, 0, type_ptr, type_len_ptr );
 
 final_cleanup:
 	return NULL;
