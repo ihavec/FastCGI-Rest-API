@@ -79,6 +79,94 @@ static void fra_p_var_free( void * value_v ) {
 
 }
 
+static void * var_get(
+		fra_req_t * request,
+		const char * name,
+		int name_len,
+		const char * type,
+		int type_len,
+		const char * * type_ptr,
+		int * type_len_ptr
+	      ) {
+
+	void * position;
+	struct var * var;
+	void * store;
+	uint32_t hash;
+
+
+	name_len--;
+	check_msg( name_len > 0, final_cleanup, "Variable name can't be an empty string." );
+
+	MurmurHash3_x86_32( (void *)name, name_len, 55, &hash );
+
+	var = (struct var *)fra_p_ht_get_by_hash( glob_store_map, name, name_len, hash );
+
+	if( var ) {
+
+		if( type_ptr ) {
+
+			*type_ptr = bdata( var->type );
+			if( type_len_ptr ) type_len_ptr = blength( var->type );
+
+		} else {
+
+			check_msg_v(
+					type_len - 1 == var->type->slen
+					&& biseqcstr( var->type, type ) == 1,
+					final_cleanup,
+					"Wrong type specified when getting global variable \"%s\". "
+					"Correct type is \"%s\" but you wrote \"%s\"",
+					name,
+					bdata( var->type ),
+					type
+				   );
+
+		}
+
+		store = request->req_store;
+
+	} else {
+
+		check_msg_v( request->endpoint && request->endpoint_store && request->endpoint_store->store,
+				final_cleanup, "No global variable \"%s\" found.", name );
+
+		var = (struct var *)fra_p_ht_get_by_hash( request->endpoint->store_map, name, name_len, hash );
+		check_msg_v( var, final_cleanup, "No variable \"%s\" found for endpoint %p", name, (void *)request->endpoint );
+
+		if( type_ptr ) {
+
+			*type_ptr = bdata( var->type );
+			if( type_len_ptr ) type_len_ptr = blength( var->type );
+
+		} else {
+
+			check_msg_v(
+					type_len - 1 == var->type->slen
+					&& biseqcstr( var->type, type ) == 1,
+					final_cleanup,
+					"Wrong type specified when getting variable \"%s\" from endpoint %p\n"
+					"Correct type is \"%s\" but you wrote \"%s\"",
+					name,
+					(void *)request->endpoint,
+					bdata( var->type ),
+					type
+				   );
+
+		}
+
+		store = request->endpoint_store->store;
+
+	}
+
+	position = (char *)store + var->position;
+
+	return position;
+
+final_cleanup:
+	return NULL;
+
+}
 
 
 
@@ -175,62 +263,14 @@ final_cleanup:
 }
 
 void * fra_var_get( fra_req_t * request,  const char * name, int name_len, const char * type, int type_len ) {
+	return var_get( request, name, name_len, type, type_len, NULL, NULL );
+}
 
-	void * position;
-	struct var * var;
-	void * store;
-	uint32_t hash;
+void * fra_var_get_with_type( fra_req_t * request,  const char * name, int name_len, const char * * type_prt, int * type_len_ptr ) {
 
+	check( type_ptr, final_cleanup );
 
-	name_len--;
-	check_msg( name_len > 0, final_cleanup, "Variable name can't be an empty string." );
-
-	MurmurHash3_x86_32( (void *)name, name_len, 55, &hash );
-
-	var = (struct var *)fra_p_ht_get_by_hash( glob_store_map, name, name_len, hash );
-
-	if( var ) {
-
-		check_msg_v(
-				type_len - 1 == var->type->slen
-				&& biseqcstr( var->type, type ) == 1,
-				final_cleanup,
-				"Wrong type specified when getting global variable \"%s\". "
-				"Correct type is \"%s\" but you wrote \"%s\"",
-				name,
-				bdata( var->type ),
-				type
-			   );
-
-		store = request->req_store;
-
-	} else {
-
-		check_msg_v( request->endpoint && request->endpoint_store && request->endpoint_store->store,
-				final_cleanup, "No global variable \"%s\" found.", name );
-
-		var = (struct var *)fra_p_ht_get_by_hash( request->endpoint->store_map, name, name_len, hash );
-		check_msg_v( var, final_cleanup, "No variable \"%s\" found for endpoint %p", name, (void *)request->endpoint );
-
-		check_msg_v(
-				type_len - 1 == var->type->slen
-				&& biseqcstr( var->type, type ) == 1,
-				final_cleanup,
-				"Wrong type specified when getting variable \"%s\" from endpoint %p\n"
-				"Correct type is \"%s\" but you wrote \"%s\"",
-				name,
-				(void *)request->endpoint,
-				bdata( var->type ),
-				type
-			   );
-
-		store = request->endpoint_store->store;
-
-	}
-
-	position = (char *)store + var->position;
-
-	return position;
+	return var_get( request, name, name_len, NULL, NULL, type_ptr, type_len_ptr );
 
 final_cleanup:
 	return NULL;

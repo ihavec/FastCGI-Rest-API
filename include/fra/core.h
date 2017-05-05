@@ -44,6 +44,20 @@ void fra_glob_deinit();
 #define fra_ds( request, name, name_len, type ) ( *( (type *)fra_var_get( request, name, name_len, #type, sizeof( #type ) ) ) )
 
 /**
+ * Same as fra_ds() but also gets the variable type ( you don't have to specify it )
+ * and always returns a void * pointer
+ */
+void * fra_var_get_with_type(
+		fra_req_t * request, /**< The current request */
+		const char * name, /**< The variable name */
+		int name_len, /**< The length of the variable name */
+		const char * * type_prt, /**< The pointer that should be set to point
+					   to the type name null terminated string */
+		int * type_len_ptr /**< The pointer where the length for the type name string
+				     should be stored. Can be NULL. */
+		);
+
+/**
  * Utility macros for for getting variables of all native C types and some widely used pointers
  */
 // native types
